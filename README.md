@@ -198,9 +198,10 @@ Transparence sur ce qui est réellement testé à ce jour :
 |---|---|
 | Noyau (scan, validation, réglages, runner, registre, version) | ✅ 41 tests automatisés, verts en CI |
 | Lint et format (`ruff`) | ✅ verts |
-| Chaîne GPU complète (MapAnything → dataset → entraînement) | ⚠️ **non exécutée** : développée sans accès à un GPU NVIDIA ni à LichtFeld Studio |
+| Détection GPU, registre des moteurs, présence des dépendances | ✅ validé sur le poste cible : GPU et VRAM affichés, aucun module manquant |
+| Chaîne GPU complète (MapAnything → dataset → entraînement) | ⚠️ **non exécutée** : reste le jalon de recette |
 | Chargement du plugin dans l'application | ✅ validé sur LichtFeld 0.5.3 / Windows (correctif 0.1.1) |
-| Rendu du panneau dans l'application | ⚠️ **non exécuté** sans GPU ni application |
+| Rendu du panneau dans l'application | ✅ validé sur LichtFeld Studio 0.5.3 / Windows (RTX 4060 Laptop, 8 Go) |
 
 La première exécution sur votre poste est donc une recette à part entière.
 [`docs/05-depannage.md`](docs/05-depannage.md) liste les points de rupture

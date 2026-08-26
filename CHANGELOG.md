@@ -5,6 +5,12 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 
 ## [Non publie]
 
+### Modifie
+- README : le rendu du panneau passe de « non execute » a valide sur LichtFeld
+  Studio 0.5.3 / Windows (RTX 4060 Laptop, 8 Go). La detection GPU, le registre
+  des moteurs et la presence des dependances sont eux aussi constates sur le
+  poste cible. Seule la chaine GPU complete reste a recetter.
+
 ## [0.1.3] - 2026-08-26
 
 ### Corrige
