@@ -1,0 +1,64 @@
+[project]
+name = "photosplat"
+version = "0.1.0"
+description = "Plugin LichtFeld Studio : quelques photos -> dataset COLMAP -> 3D Gaussian Splatting, sans etape d'alignement."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "tech4Art (Ex Baronstudio)" }]
+keywords = ["lichtfeld", "gaussian-splatting", "3dgs", "photogrammetrie", "mapanything"]
+
+# Le moteur et ses dependances. Les poids ne sont jamais redistribues :
+# ils sont telecharges depuis Hugging Face au premier lancement.
+dependencies = [
+    "torch==2.11.0",
+    "torchvision==0.26.0",
+    "numpy",
+    "pillow",
+    # Version epinglee : une montee de version doit etre un commit explicite.
+    "mapanything @ git+https://github.com/facebookresearch/map-anything.git@v1.1.3",
+    "pycolmap==3.10.0",
+    "open3d",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.urls]
+Repository = "https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat"
+Changelog = "https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/blob/master/CHANGELOG.md"
+
+# --- Contrat avec l'hote LichtFeld Studio -----------------------------------
+# `plugin_api` vise l'API publique des plugins, pas la version de ce plugin.
+[tool.lichtfeld]
+hot_reload = false
+plugin_api = ">=1,<2"
+lichtfeld_version = ">=0.5.0"
+required_features = []
+
+# --- Roue PyTorch CUDA ------------------------------------------------------
+# LichtFeld installe le plugin avec uv dans un venv isole. L'index par defaut
+# de PyPI ne sert pas de roues CUDA : on le declare explicitement.
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu130" }]
+torchvision = [{ index = "pytorch-cu130" }]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+# Les extraits de code de la documentation sont ecrits pour etre lus, pas
+# pour passer un formateur : on ne reformate que les sources Python.
+[tool.ruff.format]
+exclude = ["*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

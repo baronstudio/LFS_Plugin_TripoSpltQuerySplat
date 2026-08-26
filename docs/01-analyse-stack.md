@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | **Document** | `docs/01-analyse-stack.md` |
-| **Version doc** | 1.0.0 |
-| **Date** | 2026-08-26 |
-| **Statut** | Aide à la décision — **la stack n'est pas encore figée** |
+| **Version doc** | 1.1.0 |
+| **Date** | 2026-08-26 (rév. 1.1.0 : audit de licence, §9) |
+| **Statut** | **Stack figée** — voir §8 et §9 |
 | **Public** | Technicien 3D / dev plugin |
 
 ---
@@ -32,7 +32,12 @@ Trois constats remettent en cause ce brief tel quel :
    Le refaire à l'identique produit zéro valeur.
 
 **Conclusion : il faut choisir un axe de différenciation.** Les options sont détaillées en §5.
-La recommandation de l'auteur du document est l'**Option C** (§6).
+
+Un quatrième constat, issu de l'audit de licence mené après la décision (§8), a
+achevé de fixer la stack : **la quasi-totalité des modèles 3DGS multi-vues
+feed-forward descend de VGGT, DUSt3R ou CroCo, tous non commerciaux.** Le seul
+moteur multi-vues réellement exploitable en commercial est **MapAnything**
+(checkpoint `-apache`). C'est la stack retenue, détaillée en §9.
 
 ---
 
@@ -138,6 +143,10 @@ sans gate, sous licence 100 % permissive, ça n'existe pas encore au registre Li
 
 ## 5. Options de stack
 
+> ⚠️ **Révision 1.1.0** — l'audit de licence du §8 a disqualifié AnySplat après
+> rédaction de cette section. Les options B et C sont conservées telles quelles
+> pour la traçabilité du raisonnement ; la stack réellement retenue est au §9.
+
 ### Option A — TripoSplat seul (le brief littéral)
 `1 photo → détourage → TripoSplat → splat dans la scène`
 
@@ -194,6 +203,9 @@ Garder TripoSplat comme *mode objet* (1 photo) à côté du mode multi-photos.
 
 ## 6. Recommandation
 
+> ⚠️ **Révision 1.1.0** — l'architecture (Option C) est confirmée, mais le moteur
+> AnySplat est remplacé par MapAnything après l'audit du §8. Voir §9.
+
 **Option C, livrée par paliers, avec l'option E en extension ultérieure.**
 
 | Version | Contenu | Objectif |
@@ -218,12 +230,95 @@ car le plugin de référence est déjà disponible et gratuit.
 - **VGGT-Omega et QuerySplat → usage non commercial.** Interdit pour un livrable client payant.
 - **Depth Anything 3** : uniquement `DA3-SMALL` / `DA3-BASE` (Apache) pour un usage commercial.
 - **MapAnything** : uniquement le checkpoint `facebook/map-anything-apache`.
-- **AnySplat, TripoSplat, TRELLIS** : MIT — pas de contrainte.
+- **TripoSplat, TRELLIS** : MIT sur le code et les poids — pas de contrainte.
+- **AnySplat** : `LICENSE` MIT, mais poids dérivés de `facebook/VGGT-1B` et code
+  CroCo CC-BY-NC-SA embarqué → **non commercial en pratique** (§8).
 - Le code du plugin lui-même reste **MIT** (cf. `LICENSE` du dépôt).
 
 ---
 
-## 8. Sources
+## 8. Audit de licence — révision de la recommandation
+
+L'Option C ayant été retenue avec AnySplat comme moteur, une lecture du code
+source d'AnySplat s'imposait avant intégration. Elle invalide son étiquette MIT
+pour un usage commercial.
+
+### 9.1 Constats, vérifiables dans le dépôt AnySplat
+
+| Élément | Emplacement | Licence réelle |
+|---|---|---|
+| Initialisation de l'encodeur | `src/model/encoder/anysplat.py:133` → `VGGT.from_pretrained("facebook/VGGT-1B")` | **VGGT-1B est explicitement non commercial** (Meta ne l'autorise que via le checkpoint séparé `VGGT-1B-Commercial`, sur candidature) |
+| Backbone CroCo / DUSt3R | `src/model/encoder/backbone/croco/*` | en-têtes : *« Licensed under CC BY-NC-SA 4.0 (non-commercial use only) »*, Naver |
+| Têtes DPT | `src/model/encoder/heads/*` | mêmes en-têtes non commerciaux |
+
+Une vingtaine de fichiers sources portent un en-tête non commercial à
+l'intérieur d'un dépôt dont le `LICENSE` racine annonce MIT. Les poids publiés
+descendent d'un checkpoint non commercial.
+
+**Conclusion : AnySplat est écarté.** Le fichier `LICENSE` d'un dépôt ne prime
+pas sur les licences des composants qu'il embarque.
+
+### 9.2 Portée du constat
+
+Le même mécanisme disqualifiait déjà QuerySplat et VGGT-Omega (§4.3). Il touche
+une large part de la famille « 3DGS multi-vues feed-forward » : ces travaux
+partent presque tous de VGGT, de DUSt3R ou de CroCo, tous non commerciaux.
+
+**Règle retenue pour ce projet :** aucun moteur n'est intégré sans lecture des
+en-têtes de ses sources et de la provenance de ses poids. Le test
+`tests/test_backends.py::test_shipped_backends_are_commercially_usable` échoue
+si un moteur non commercial entre au registre sans décision explicite.
+
+### 9.3 Options propres restantes
+
+| Modèle | Licence code | Licence poids | Multi-vues | Sortie |
+|---|---|---|---|---|
+| **MapAnything** (`facebook/map-anything-apache`) | Apache 2.0 | **Apache 2.0** | ✅ | poses + géométrie métrique |
+| **TripoSplat** | MIT | MIT | ❌ (1 image) | 3DGS directement |
+| **TRELLIS / TRELLIS.2** | MIT | MIT | ⚠️ conditionnement multi-images sans modèle dédié | mesh PBR, 3DGS |
+| Depth Anything 3 | Apache | Apache **uniquement** SMALL et BASE | ✅ | profondeur / rayons |
+
+MapAnything est le seul à réunir : multi-vues, licence permissive sur le code
+**et** les poids, Python 3.12, installation par `pip`, et un exportateur COLMAP
+officiel (`export_predictions_to_colmap`) explicitement destiné aux chaînes
+Gaussian Splatting.
+
+---
+
+## 9. Stack retenue
+
+```
+N photos non calibrées
+        │
+        ▼
+MapAnything  (facebook/map-anything-apache, Apache 2.0)
+  poses de caméra + profondeurs + nuage 3D métrique
+        │
+        ▼
+dataset COLMAP  (images/ + sparse/0/ + points.ply)
+        │
+        ▼
+Entraînement natif LichtFeld Studio sur les vraies photos
+        │
+        ▼
+Splat final — fidèle au sujet, aucune texture inventée
+```
+
+| Décision | Motif |
+|---|---|
+| Moteur v0.1 : **MapAnything** | seul moteur multi-vues à licence permissive de bout en bout |
+| Checkpoint **`-apache` imposé** | le checkpoint par défaut est CC-BY-NC ; il n'est pas exposé dans l'interface |
+| Splat produit par **LichtFeld**, pas par le modèle | fidélité au sujet, et le feed-forward plafonne en résolution |
+| **TripoSplat** repoussé en v0.3 | mono-image et génératif : complément pour l'objet isolé, pas le cœur |
+| **AnySplat, QuerySplat, VGGT-Ω** écartés | licences non commerciales (§8) |
+
+La promesse d'origine est tenue : plus de RealityScan, plus de COLMAP, pas
+besoin d'un jeu d'images à fort recouvrement — et le résultat reste exploitable
+commercialement.
+
+---
+
+## 10. Sources
 
 - TripoSplat — <https://github.com/VAST-AI-Research/TripoSplat>
 - TripoSplat (poids) — <https://huggingface.co/VAST-AI/TripoSplat>
@@ -234,6 +329,8 @@ car le plugin de référence est déjà disponible et gratuit.
 - AnySplat — <https://github.com/InternRobotics/AnySplat> · <https://arxiv.org/abs/2505.23716>
 - MapAnything — <https://github.com/facebookresearch/map-anything> · <https://arxiv.org/abs/2509.13414>
 - Depth Anything 3 — <https://github.com/ByteDance-Seed/Depth-Anything-3> · <https://arxiv.org/abs/2511.10647>
+- TRELLIS — <https://github.com/microsoft/TRELLIS> · TRELLIS.2 — <https://github.com/microsoft/TRELLIS.2>
+- VGGT (licences des checkpoints) — <https://github.com/facebookresearch/vggt>
 - LichtFeld Studio — <https://github.com/MrNeRF/LichtFeld-Studio>
 - Système de plugins — <https://github.com/MrNeRF/LichtFeld-Studio/blob/master/docs/plugin-system.md>
 - API Python (stubs) — `src/python/stubs/lichtfeld/__init__.pyi` du dépôt LichtFeld Studio

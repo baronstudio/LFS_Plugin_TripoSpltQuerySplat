@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+pyrightconfig.json
+.vscode/
+# Sorties de generation et poids : jamais versionnes.
+runs/
+ckpts/
+*.ply
+*.splat
