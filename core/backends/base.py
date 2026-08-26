@@ -14,6 +14,7 @@ dans `registry.py`. Rien d'autre a modifier.
 
 from __future__ import annotations
 
+import importlib.util
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -95,6 +96,29 @@ def raise_if_cancelled(cancel: threading.Event) -> None:
     """Point de controle d'annulation, appele entre deux etapes longues."""
     if cancel.is_set():
         raise Cancelled("Generation interrompue par l'utilisateur.")
+
+
+def missing_modules(names: tuple[str, ...]) -> list[str]:
+    """Modules absents de l'environnement, **sans les importer**.
+
+    `find_spec` interroge les chemins d'import sans executer le module.
+    C'est vital : `import torch` puis `import mapanything` coutent des dizaines
+    de secondes sur Windows (chargement de DLL, sans CPU visible). Un `check()`
+    est appele depuis le constructeur du panneau, donc sur le fil de
+    l'interface : il doit rester instantane.
+
+    La disponibilite reelle de CUDA n'est donc PAS verifiee ici -- elle exige
+    d'importer torch. Elle l'est au lancement de la generation, dans `run()`.
+    """
+    missing: list[str] = []
+    for name in names:
+        try:
+            if importlib.util.find_spec(name) is None:
+                missing.append(name)
+        except (ImportError, ValueError):
+            # Paquet dont le parent est absent ou casse : traite comme manquant.
+            missing.append(name)
+    return missing
 
 
 def unique_names(paths: list[Path]) -> list[str]:

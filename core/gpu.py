@@ -42,29 +42,20 @@ class GpuInfo:
 
 
 def detect() -> GpuInfo:
-    """Detecte le GPU via torch, avec repli sur nvidia-smi."""
-    info = _detect_with_torch()
-    if info is not None:
-        return info
+    """Detecte le GPU via `nvidia-smi`.
+
+    Volontairement sans torch : son import coute des dizaines de secondes sur
+    Windows, et `detect()` est appele a la construction du panneau, donc sur le
+    fil de l'interface. `nvidia-smi` repond en quelques dizaines de millisecondes.
+
+    Consequence assumee : on constate la presence d'un GPU et d'un pilote, pas
+    l'utilisabilite reelle de CUDA par torch. Cette verification-la a lieu au
+    lancement de la generation, ou torch est de toute facon charge.
+    """
     info = _detect_with_smi()
     if info is not None:
         return info
     return GpuInfo(available=False, name="inconnu", vram_gb=0.0)
-
-
-def _detect_with_torch() -> GpuInfo | None:
-    try:
-        import torch  # import tardif : torch n'est pas requis pour les tests
-    except ImportError:
-        return None
-    if not torch.cuda.is_available():
-        return GpuInfo(available=False, name="CUDA indisponible", vram_gb=0.0)
-    props = torch.cuda.get_device_properties(0)
-    return GpuInfo(
-        available=True,
-        name=props.name,
-        vram_gb=props.total_memory / (1024**3),
-    )
 
 
 def _detect_with_smi() -> GpuInfo | None:

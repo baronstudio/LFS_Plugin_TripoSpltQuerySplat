@@ -1,9 +1,29 @@
 """Contrat des moteurs et registre."""
 
+import builtins
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from core.backends import base, registry
+
+#: Modules dont l'import coute des dizaines de secondes sur Windows.
+HEAVY = {"torch", "torchvision", "mapanything", "pycolmap", "open3d", "uniception"}
+
+
+def _no_heavy_import():
+    """Contexte qui echoue si un module lourd est importe."""
+    real_import = builtins.__import__
+
+    def guard(name, *args, **kwargs):
+        root = name.split(".")[0]
+        if root in HEAVY:
+            raise AssertionError(
+                f"import de {root} sur le fil de l'interface : l'application figerait."
+            )
+        return real_import(name, *args, **kwargs)
+
+    return mock.patch.object(builtins, "__import__", guard)
 
 
 class TestRegistry(unittest.TestCase):
@@ -38,6 +58,24 @@ class TestRegistry(unittest.TestCase):
     def test_check_returns_a_list(self):
         for name in registry.names():
             self.assertIsInstance(registry.get(name).check(), list)
+
+    def test_check_never_imports_heavy_modules(self):
+        """Regression : `check()` est appele depuis le constructeur du panneau.
+
+        Importer torch ou mapanything a cet endroit fige LichtFeld Studio
+        pendant des dizaines de secondes, sans activite CPU visible.
+        """
+        with _no_heavy_import():
+            for name in registry.names():
+                with self.subTest(backend=name):
+                    registry.get(name).check()
+
+    def test_missing_modules_detects_absence_without_importing(self):
+        self.assertEqual(base.missing_modules(("json", "pathlib")), [])
+        self.assertEqual(
+            base.missing_modules(("module_qui_nexiste_pas_du_tout",)),
+            ["module_qui_nexiste_pas_du_tout"],
+        )
 
 
 class TestHelpers(unittest.TestCase):

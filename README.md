@@ -2,7 +2,7 @@
 
 **Quelques photos d'un objet → un 3D Gaussian Splatting, sans étape d'alignement.**
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.1.1-blue)](CHANGELOG.md)
 [![Licence](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
 [![LichtFeld Studio](https://img.shields.io/badge/LichtFeld%20Studio-%E2%89%A5%200.5.0-orange)](https://github.com/MrNeRF/LichtFeld-Studio)
 
@@ -166,7 +166,7 @@ core/                    logique métier — aucune dépendance à l'interface
   lfs.py                 adaptateur de l'API LichtFeld
   backends/              moteurs — un fichier par moteur
 panels/main_panel.py     interface (affichage uniquement)
-tests/                   38 tests, sans GPU ni torch ni LichtFeld
+tests/                   41 tests, sans GPU ni torch ni LichtFeld
 scripts/                 installation et montée de version
 docs/                    documentation technique
 ```
@@ -195,10 +195,11 @@ Transparence sur ce qui est réellement testé à ce jour :
 
 | Périmètre | État |
 |---|---|
-| Noyau (scan, validation, réglages, runner, registre, version) | ✅ 38 tests automatisés, verts en CI |
+| Noyau (scan, validation, réglages, runner, registre, version) | ✅ 41 tests automatisés, verts en CI |
 | Lint et format (`ruff`) | ✅ verts |
 | Chaîne GPU complète (MapAnything → dataset → entraînement) | ⚠️ **non exécutée** : développée sans accès à un GPU NVIDIA ni à LichtFeld Studio |
-| Rendu du panneau dans l'application | ⚠️ **non exécuté**, pour la même raison |
+| Chargement du plugin dans l'application | ✅ validé sur LichtFeld 0.5.3 / Windows (correctif 0.1.1) |
+| Rendu du panneau dans l'application | ⚠️ **non exécuté** sans GPU ni application |
 
 La première exécution sur votre poste est donc une recette à part entière.
 [`docs/05-depannage.md`](docs/05-depannage.md) liste les points de rupture

@@ -25,9 +25,13 @@ from .base import (
     BackendInfo,
     ProgressFn,
     RunResult,
+    missing_modules,
     raise_if_cancelled,
     unique_names,
 )
+
+#: Modules dont l'absence empeche toute generation.
+REQUIRED_MODULES = ("torch", "mapanything", "pycolmap", "open3d")
 
 #: Seul checkpoint retenu : c'est le seul sous licence permissive.
 MODEL_ID = "facebook/map-anything-apache"
@@ -54,21 +58,18 @@ class MapAnythingBackend:
     info = INFO
 
     def check(self) -> list[str]:
-        problems: list[str] = []
-        try:
-            import torch
-        except ImportError:
-            problems.append(
-                "PyTorch introuvable. Reinstallez le plugin pour reconstruire son environnement."
-            )
-            return problems
-        if not torch.cuda.is_available():
-            problems.append("Aucun GPU CUDA disponible : MapAnything ne peut pas s'executer.")
-        try:
-            import mapanything  # noqa: F401
-        except ImportError:
-            problems.append("Paquet `mapanything` introuvable. Voir docs/03-installation.md.")
-        return problems
+        """Verification instantanee : presence des modules, sans les importer.
+
+        Voir `missing_modules` : importer torch ici figerait l'interface.
+        """
+        missing = missing_modules(REQUIRED_MODULES)
+        if missing:
+            return [
+                "Module(s) introuvable(s) dans l'environnement du plugin : "
+                + ", ".join(missing)
+                + ". Voir docs/03-installation.md."
+            ]
+        return []
 
     def run(
         self,
@@ -91,8 +92,17 @@ class MapAnythingBackend:
         from mapanything.utils.image import load_images
         from mapanything.utils.misc import seed_everything
 
+        # Verification authentique de CUDA : elle exige torch, donc elle a lieu
+        # ici et non dans `check()`, qui doit rester instantane.
+        if not torch.cuda.is_available():
+            raise RuntimeError(
+                "Aucun GPU CUDA disponible. torch "
+                f"{torch.__version__} rapporte cuda={torch.version.cuda}. "
+                "Voir docs/05-depannage.md."
+            )
+
         seed_everything(int(params.get("seed", 42)))
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = "cuda"
 
         report(0.10, f"Chargement du modele ({MODEL_ID})")
         raise_if_cancelled(cancel)

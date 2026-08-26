@@ -5,6 +5,31 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 
 ## [Non publie]
 
+## [0.1.1] - 2026-08-26
+
+### Corrige
+- **LichtFeld Studio figeait au chargement du plugin, sans activite CPU.**
+  `MapAnythingBackend.check()` faisait `import torch` puis `import mapanything`,
+  et `gpu.detect()` importait torch. Ces deux appels ont lieu dans le
+  constructeur du panneau, donc sur le fil de l'interface : la chaine d'imports
+  (torch, uniception, timm, torchvision, rerun-sdk, tensorboard) prend des
+  dizaines de secondes sous Windows, essentiellement en chargement de DLL --
+  d'ou une application figee sans charge machine visible.
+  - `check()` utilise desormais `importlib.util.find_spec`, qui constate la
+    presence d'un module sans l'executer.
+  - `gpu.detect()` s'appuie sur `nvidia-smi` seul.
+  - La disponibilite reelle de CUDA est verifiee au lancement de la generation,
+    dans `run()`, avec un message citant `torch.__version__` et
+    `torch.version.cuda`.
+  - Deux tests de non-regression echouent si un import lourd revient sur le
+    chemin de l'interface.
+
+### Modifie
+- `core/gpu.py` ne depend plus de torch. La detection constate la presence d'un
+  GPU et d'un pilote, pas l'utilisabilite de CUDA par torch : compromis assume
+  et documente.
+
+
 ### Corrige
 - Documentation : recuperation apres une interruption de `uv sync`. Un arret de
   LichtFeld pendant la synchronisation laisse des verrous orphelins ; le
@@ -43,5 +68,6 @@ d'alignement prealable.
 - AnySplat, QuerySplat et VGGT-Omega ecartes pour contamination de licence
   non commerciale. Detail dans `docs/01-analyse-stack.md`.
 
-[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.1.0...HEAD
+[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.1
 [0.1.0]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.0

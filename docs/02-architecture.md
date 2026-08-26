@@ -75,6 +75,23 @@ des fonctions*, jamais au niveau du module. C'est ce qui permet d'exécuter la
 suite de tests sur un runner CI sans GPU, et de charger le plugin instantanément
 sans attendre l'initialisation de CUDA.
 
+**Corollaire, appris à la dure (bug corrigé en 0.1.1)** : « à l'intérieur d'une
+fonction » ne suffit pas si cette fonction est appelée depuis le fil de
+l'interface. `check()` et `gpu.detect()` sont invoqués par le constructeur du
+panneau ; y importer torch figeait LichtFeld Studio des dizaines de secondes,
+sans charge CPU visible — le temps passe en chargement de DLL.
+
+La règle exacte est donc : **rien de lourd sur le chemin `__init__` /
+`draw()` du panneau.** Pour constater la présence d'un module sans le charger,
+utilisez `missing_modules()` (`core/backends/base.py`), qui repose sur
+`importlib.util.find_spec`. Tout ce qui exige un vrai import appartient à
+`run()`, qui s'exécute dans un thread de travail.
+
+Deux tests verrouillent cette règle :
+`test_check_never_imports_heavy_modules` et `test_detect_never_imports_torch`
+remplacent `builtins.__import__` par une garde qui échoue si un module lourd
+est chargé.
+
 ---
 
 ## Ajouter un moteur

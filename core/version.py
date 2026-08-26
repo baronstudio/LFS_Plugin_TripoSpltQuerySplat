@@ -10,7 +10,7 @@ Convention : SemVer -- MAJEUR.MINEUR.CORRECTIF
 met les deux a jour en une commande.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 #: Nom court affiche dans l'interface et les logs.
 PLUGIN_NAME = "PhotoSplat"

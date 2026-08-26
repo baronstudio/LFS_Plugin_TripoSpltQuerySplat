@@ -1,6 +1,8 @@
 """Derivation des garde-fous a partir de la VRAM."""
 
+import builtins
 import unittest
+from unittest import mock
 
 from core import gpu
 
@@ -19,6 +21,18 @@ class TestGpu(unittest.TestCase):
     def test_detect_never_raises(self):
         info = gpu.detect()
         self.assertIsInstance(info.describe(), str)
+
+    def test_detect_never_imports_torch(self):
+        """Regression : `detect()` tourne sur le fil de l'interface."""
+        real_import = builtins.__import__
+
+        def guard(name, *args, **kwargs):
+            if name.split(".")[0] in {"torch", "torchvision"}:
+                raise AssertionError("detect() a importe torch : l'interface figerait.")
+            return real_import(name, *args, **kwargs)
+
+        with mock.patch.object(builtins, "__import__", guard):
+            gpu.detect()
 
     def test_describe_mentions_missing_gpu(self):
         info = gpu.GpuInfo(available=False, name="x", vram_gb=0.0)

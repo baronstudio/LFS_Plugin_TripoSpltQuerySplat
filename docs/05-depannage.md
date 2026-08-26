@@ -116,7 +116,49 @@ peut sembler figée alors qu'elle travaille. Vérifiez l'activité réseau dans 
 gestionnaire des tâches avant de conclure à un blocage — tant que le débit est
 non nul, laissez faire.
 
-### 3. L'environnement isolé ne se construit pas (`uv sync` échoue)
+### 3. L'application fige au chargement, sans activité machine (corrigé en 0.1.1)
+
+**Symptôme** : `lf.plugins.load("photosplat")` ne rend jamais la main. Ni CPU,
+ni GPU, ni réseau. `uv sync --project . --verbose` répond pourtant
+« Requirement already installed » sur tout et se termine en quelques
+millisecondes : les dépendances ne sont pas en cause.
+
+**Cause** (bug du plugin, versions ≤ 0.1.0) : `check()` importait `torch` puis
+`mapanything`, et `gpu.detect()` importait `torch`. Ces appels ont lieu dans le
+constructeur du panneau, donc **sur le fil de l'interface**. La chaîne
+d'imports — torch, uniception, timm, torchvision, rerun-sdk, tensorboard —
+prend des dizaines de secondes sous Windows, presque uniquement en chargement
+de DLL : d'où une application figée sans charge machine mesurable.
+
+**Correctif** : mettre à jour en **0.1.1 ou supérieur**.
+
+```powershell
+cd "$HOME\.lichtfeld\plugins\photosplat"
+git pull
+```
+
+Puis, dans LichtFeld Studio :
+
+```python
+import lichtfeld as lf
+lf.plugins.reload("photosplat")
+```
+
+Aucune reconstruction d'environnement n'est nécessaire : le correctif ne touche
+que du code Python, pas les dépendances.
+
+**Mesurer le coût réel** de ces imports sur votre poste, à titre de contrôle :
+
+```powershell
+Measure-Command { & "$HOME\.lichtfeld\plugins\photosplat\.venv\Scripts\python.exe" -c "import torch, mapanything" }
+```
+
+Depuis la 0.1.1, ce coût n'est plus jamais payé sur le fil de l'interface :
+`check()` s'appuie sur `importlib.util.find_spec`, qui constate la présence d'un
+module sans l'exécuter, et la disponibilité de CUDA n'est vérifiée qu'au
+lancement d'une génération.
+
+### 4. L'environnement isolé ne se construit pas (`uv sync` échoue)
 
 **Cause la plus probable** : les versions PyTorch épinglées
 (`torch==2.11.0` / `torchvision==0.26.0`, index `cu130`) ne correspondent pas au
@@ -133,7 +175,7 @@ url = "https://download.pytorch.org/whl/cu126"   # à adapter
 Vérifiez la version CUDA supportée par votre driver avec `nvidia-smi`
 (coin supérieur droit).
 
-### 4. `Paquet mapanything introuvable`
+### 5. `Paquet mapanything introuvable`
 
 L'installation de `mapanything` depuis git a échoué (réseau, proxy, git absent
 du PATH, ou compilation d'une dépendance). Relancez l'installation du plugin et
@@ -146,7 +188,7 @@ le venv du plugin :
   "pycolmap==3.10.0" open3d
 ```
 
-### 5. `Aucun GPU CUDA disponible`
+### 6. `Aucun GPU CUDA disponible`
 
 `torch.cuda.is_available()` renvoie faux. Soit le driver est trop ancien pour
 la roue CUDA installée, soit une roue CPU a été résolue. Vérifiez dans le venv
@@ -156,9 +198,9 @@ du plugin :
 import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())
 ```
 
-Un `torch.version.cuda` à `None` signifie roue CPU → point 3.
+Un `torch.version.cuda` à `None` signifie roue CPU → point 4.
 
-### 6. Mémoire GPU insuffisante pendant l'inférence
+### 7. Mémoire GPU insuffisante pendant l'inférence
 
 **Symptômes** : `CUDA out of memory`, ou l'application se fige puis reprend.
 
@@ -171,7 +213,7 @@ Un `torch.version.cuda` à `None` signifie roue CPU → point 3.
 Le plafond automatique est volontairement prudent (6 vues si la VRAM n'a pas pu
 être détectée). Il est dérivé dans `core/gpu.py`, table `_VIEW_BUDGET`.
 
-### 7. LichtFeld ne reconnaît pas le dataset généré
+### 8. LichtFeld ne reconnaît pas le dataset généré
 
 **Cause probable** : convention de dossier. MapAnything écrit `sparse/*.bin`,
 LichtFeld attend `sparse/0/*.bin`. Le plugin duplique les fichiers dans
@@ -187,7 +229,7 @@ sparse/points.ply
 Si `sparse/0/` est vide, l'export a échoué avant : consultez le journal du
 panneau.
 
-### 8. Le panneau ne s'affiche pas / erreur d'appel d'un widget
+### 9. Le panneau ne s'affiche pas / erreur d'appel d'un widget
 
 L'API immédiate de LichtFeld peut évoluer d'une version à l'autre. Le panneau
 n'utilise que des widgets documentés (`label`, `heading`, `button`,
@@ -199,12 +241,12 @@ En cas d'erreur sur l'un d'eux, `lf.plugins.get_traceback("photosplat")` donne
 la ligne exacte. Le correctif est local à `panels/main_panel.py` : la logique
 métier n'est pas concernée.
 
-### 9. Le bouton `Annuler` ne réagit pas immédiatement
+### 10. Le bouton `Annuler` ne réagit pas immédiatement
 
 Comportement normal et documenté : l'annulation est prise en compte au prochain
 point de contrôle. Une inférence GPU déjà lancée n'est pas interruptible.
 
-### 10. Résultat de mauvaise qualité
+### 11. Résultat de mauvaise qualité
 
 Ce n'est pas nécessairement un bug. Par ordre de fréquence :
 
