@@ -69,6 +69,7 @@ thread d'interface et le thread de génération.
 | `core/backends/registry.py` | catalogue des moteurs | — |
 | `core/backends/mapanything_backend.py` | moteur multi-vues | torch, mapanything |
 | `panels/main_panel.py` | interface | `lichtfeld` |
+| `panels/main_panel.rml` | coquille du panneau, ancrage `im-root` | — |
 
 **Règle d'or** : tout import lourd (torch, mapanything) se fait *à l'intérieur
 des fonctions*, jamais au niveau du module. C'est ce qui permet d'exécuter la
@@ -183,6 +184,19 @@ l'alignement, pas à remplacer l'entraînement.
 MapAnything écrit selon une convention, LichtFeld et COLMAP en attendent une
 autre. Copier trois fichiers coûte quelques kilo-octets et évite un dossier
 inutilisable par l'un ou l'autre des outils.
+
+**Pourquoi une coquille RML alors que tout est dessine en mode immediat ?**
+Parce qu'un panneau sans attribut `template` est enregistre mais ne s'affiche
+pas, et ce sans lever d'erreur. Le gabarit genere par `lf.plugins.create()`
+comme les plugins tiers fonctionnels en fournissent tous une. `main_panel.rml`
+se limite donc au strict necessaire : une boite et le `<div id="im-root">` ou
+`draw(ui)` se monte.
+
+**Pourquoi des imports relatifs ?**
+Le plugin est charge comme un paquet. En absolu, `from core import ...` designe
+le premier module `core` trouve dans `sys.path` -- qui peut appartenir a un
+autre plugin, tant ce nom est repandu. Les imports relatifs suppriment
+purement et simplement ce risque de collision.
 
 **Pourquoi `hot_reload = false` ?**
 Le plugin lance des threads et charge des modèles en VRAM. Un rechargement à

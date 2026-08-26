@@ -5,6 +5,29 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 
 ## [Non publie]
 
+## [0.1.3] - 2026-08-26
+
+### Corrige
+- **Le panneau restait invisible malgre un plugin actif** (suite de 0.1.2).
+  Comparaison faite avec le gabarit genere par `lf.plugins.create()` et avec un
+  plugin tiers fonctionnel, trois ecarts subsistaient :
+  - **Coquille RML absente.** Le gabarit officiel comme les plugins existants
+    fournissent tous un `panels/main_panel.rml` designe par l'attribut
+    `template`. Sans lui, le panneau est enregistre mais ne s'affiche nulle
+    part, sans erreur. Ajout de `main_panel.rml` (avec le point d'ancrage
+    `<div id="im-root">` ou se monte le rendu immediat) et de `main_panel.rcss`.
+  - **Imports absolus.** Le plugin est charge comme un paquet ; `__init__.py`
+    et le panneau utilisent desormais des imports relatifs, comme le gabarit.
+    En absolu, `core` et `panels` sont des noms assez generiques pour entrer en
+    collision avec ceux d'un autre plugin charge dans le meme interpreteur.
+  - **Journalisation.** `print()` remplace par `lf.log.info` / `lf.log.warn`,
+    qui alimentent l'onglet Logging de LichtFeld Studio.
+
+### Ajoute
+- `panels/main_panel.rml` et `panels/main_panel.rcss` : coquille minimale du
+  panneau, tout le contenu restant dessine en mode immediat.
+
+
 ## [0.1.2] - 2026-08-26
 
 ### Corrige
@@ -85,7 +108,8 @@ d'alignement prealable.
 - AnySplat, QuerySplat et VGGT-Omega ecartes pour contamination de licence
   non commerciale. Detail dans `docs/01-analyse-stack.md`.
 
-[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.1.2...HEAD
+[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.3
 [0.1.2]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.2
 [0.1.1]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.1
 [0.1.0]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.0

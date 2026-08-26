@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import lichtfeld as lf
 
-from core.version import __version__, banner
-from panels.main_panel import MainPanel
+from .core.version import __version__, banner
+from .panels.main_panel import MainPanel
 
 #: Classes enregistrees aupres de l'hote, dans l'ordre d'enregistrement.
 _CLASSES = [MainPanel]
@@ -20,7 +20,7 @@ def on_load() -> None:
     """Enregistre les panneaux. Appele par LichtFeld Studio."""
     for cls in _CLASSES:
         lf.register_class(cls)
-    print(f"[{banner()}] charge")
+    lf.log.info(f"{banner()} charge")
 
 
 def on_unload() -> None:
@@ -29,5 +29,5 @@ def on_unload() -> None:
         try:
             lf.unregister_class(cls)
         except Exception as exc:  # noqa: BLE001 - la decharge ne doit jamais echouer
-            print(f"[PhotoSplat] decharge partielle : {exc}")
-    print(f"[PhotoSplat v{__version__}] decharge")
+            lf.log.warn(f"PhotoSplat : decharge partielle ({exc})")
+    lf.log.info(f"PhotoSplat v{__version__} decharge")

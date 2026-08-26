@@ -1,0 +1,17 @@
+/* Coquille minimale du panneau. Le contenu est dessine en mode immediat :
+   on se contente ici de fournir la boite et ses marges. */
+
+body.plugin-panel {
+    font-family: Inter;
+    padding: 0;
+}
+
+.panel-shell {
+    display: flex;
+    flex-direction: column;
+    padding: 12dp;
+}
+
+#im-root {
+    display: block;
+}

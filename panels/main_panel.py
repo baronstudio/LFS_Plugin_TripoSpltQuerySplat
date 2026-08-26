@@ -12,11 +12,14 @@ from pathlib import Path
 
 import lichtfeld as lf
 
-from core import gpu, lfs, pipeline
-from core import images as images_mod
-from core import settings as settings_mod
-from core.backends import KIND_DATASET, registry
-from core.version import PLUGIN_ID, PLUGIN_NAME, __version__
+# Imports relatifs : le plugin est charge comme un paquet. En absolu, les noms
+# `core` et `panels` sont si generiques qu'ils entreraient en collision avec
+# ceux des autres plugins charges dans le meme interpreteur.
+from ..core import gpu, lfs, pipeline
+from ..core import images as images_mod
+from ..core import settings as settings_mod
+from ..core.backends import KIND_DATASET, registry
+from ..core.version import PLUGIN_ID, PLUGIN_NAME, __version__
 
 _OK = (0.45, 0.85, 0.45, 1.0)
 _WARN = (0.95, 0.75, 0.30, 1.0)
@@ -30,15 +33,20 @@ class MainPanel(lf.ui.Panel):
     """Photos -> dataset ou splat -> scene LichtFeld.
 
     `MAIN_PANEL_TAB` place le panneau dans la zone a onglets principale, aux
-    cotes de « Rendering » et « Training ». C'est l'emplacement retenu par les
-    plugins existants de LichtFeld Studio, et le seul ou l'utilisateur trouve
-    naturellement un outil de generation.
+    cotes de « Rendering » et « Training ».
+
+    `template` designe la coquille RML du panneau. Elle n'est pas optionnelle en
+    pratique : le gabarit genere par `lf.plugins.create()` comme les plugins
+    existants en fournissent tous une. Sans elle, le panneau est enregistre mais
+    n'apparait nulle part, sans erreur. Le contenu, lui, reste dessine en mode
+    immediat par `draw()`, qui se monte dans le `<div id="im-root">`.
     """
 
     id = f"{PLUGIN_ID}.main_panel"
     label = PLUGIN_NAME
     space = lf.ui.PanelSpace.MAIN_PANEL_TAB
     order = 230
+    template = str(Path(__file__).resolve().with_name("main_panel.rml"))
     update_policy = "interval"
     update_interval_ms = 120
 

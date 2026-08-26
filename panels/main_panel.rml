@@ -1,0 +1,12 @@
+<rml>
+<head>
+  <link type="text/rcss" href="main_panel.rcss"/>
+</head>
+<body id="body" class="plugin-panel photosplat-panel">
+  <div class="panel-shell">
+    <!-- Toute l'interface du plugin est dessinee en mode immediat par
+         MainPanel.draw(ui), qui se monte dans ce point d'ancrage. -->
+    <div id="im-root"></div>
+  </div>
+</body>
+</rml>
