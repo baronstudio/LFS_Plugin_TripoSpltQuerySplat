@@ -5,6 +5,13 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 
 ## [Non publie]
 
+### Corrige
+- Documentation : `lf.plugins.install()` exige un depot public et le code sur
+  la branche par defaut. L'installeur de LichtFeld telecharge l'archive GitHub
+  sans authentification ; sur un depot prive, l'echec se presente comme une
+  panne reseau (trace terminee sur `urlopen`). Procedure de repli par clone
+  documentee dans le README, `docs/03-installation.md` et `docs/05-depannage.md`.
+
 ## [0.1.0] - 2026-08-26
 
 Premiere version. Chaine complete « quelques photos -> splat » sans etape

@@ -35,7 +35,40 @@ lf.plugins.get_traceback("photosplat")
 
 ## Points de rupture probables
 
-### 1. L'environnement isolé ne se construit pas (`uv sync` échoue)
+### 1. `lf.plugins.install(...)` échoue, trace terminée sur `urlopen`
+
+```
+File "...\lfs_plugins\installer.py", line 147, in _download_url_to_temp
+    with urlopen(req, timeout=60) as resp:
+```
+
+**Cause** : l'installeur télécharge l'archive GitHub **sans authentification**.
+Sur un dépôt privé, GitHub renvoie 404. Le message d'erreur ne le dit pas :
+il ressemble à une panne réseau.
+
+**Correctifs**, au choix :
+
+- rendre le dépôt public, **et** s'assurer que le code est sur la branche par
+  défaut (l'installeur y va par défaut) ;
+- ou installer par clone, ce qui fonctionne sur un dépôt privé puisque `git`
+  utilise vos identifiants :
+
+```powershell
+git clone https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat.git
+cd LFS_Plugin_TripoSpltQuerySplat
+.\scripts\install.ps1
+```
+
+```python
+import lichtfeld as lf
+lf.plugins.discover()
+lf.plugins.load("photosplat")   # construit aussi l'environnement isole
+```
+
+`load()` appelle `installer.ensure_venv()` : un plugin lie manuellement obtient
+donc le meme environnement qu'un plugin installe depuis GitHub.
+
+### 2. L'environnement isolé ne se construit pas (`uv sync` échoue)
 
 **Cause la plus probable** : les versions PyTorch épinglées
 (`torch==2.11.0` / `torchvision==0.26.0`, index `cu130`) ne correspondent pas au
@@ -52,7 +85,7 @@ url = "https://download.pytorch.org/whl/cu126"   # à adapter
 Vérifiez la version CUDA supportée par votre driver avec `nvidia-smi`
 (coin supérieur droit).
 
-### 2. `Paquet mapanything introuvable`
+### 3. `Paquet mapanything introuvable`
 
 L'installation de `mapanything` depuis git a échoué (réseau, proxy, git absent
 du PATH, ou compilation d'une dépendance). Relancez l'installation du plugin et
@@ -65,7 +98,7 @@ le venv du plugin :
   "pycolmap==3.10.0" open3d
 ```
 
-### 3. `Aucun GPU CUDA disponible`
+### 4. `Aucun GPU CUDA disponible`
 
 `torch.cuda.is_available()` renvoie faux. Soit le driver est trop ancien pour
 la roue CUDA installée, soit une roue CPU a été résolue. Vérifiez dans le venv
@@ -75,9 +108,9 @@ du plugin :
 import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())
 ```
 
-Un `torch.version.cuda` à `None` signifie roue CPU → point 1.
+Un `torch.version.cuda` à `None` signifie roue CPU → point 2.
 
-### 4. Mémoire GPU insuffisante pendant l'inférence
+### 5. Mémoire GPU insuffisante pendant l'inférence
 
 **Symptômes** : `CUDA out of memory`, ou l'application se fige puis reprend.
 
@@ -90,7 +123,7 @@ Un `torch.version.cuda` à `None` signifie roue CPU → point 1.
 Le plafond automatique est volontairement prudent (6 vues si la VRAM n'a pas pu
 être détectée). Il est dérivé dans `core/gpu.py`, table `_VIEW_BUDGET`.
 
-### 5. LichtFeld ne reconnaît pas le dataset généré
+### 6. LichtFeld ne reconnaît pas le dataset généré
 
 **Cause probable** : convention de dossier. MapAnything écrit `sparse/*.bin`,
 LichtFeld attend `sparse/0/*.bin`. Le plugin duplique les fichiers dans
@@ -106,7 +139,7 @@ sparse/points.ply
 Si `sparse/0/` est vide, l'export a échoué avant : consultez le journal du
 panneau.
 
-### 6. Le panneau ne s'affiche pas / erreur d'appel d'un widget
+### 7. Le panneau ne s'affiche pas / erreur d'appel d'un widget
 
 L'API immédiate de LichtFeld peut évoluer d'une version à l'autre. Le panneau
 n'utilise que des widgets documentés (`label`, `heading`, `button`,
@@ -118,12 +151,12 @@ En cas d'erreur sur l'un d'eux, `lf.plugins.get_traceback("photosplat")` donne
 la ligne exacte. Le correctif est local à `panels/main_panel.py` : la logique
 métier n'est pas concernée.
 
-### 7. Le bouton `Annuler` ne réagit pas immédiatement
+### 8. Le bouton `Annuler` ne réagit pas immédiatement
 
 Comportement normal et documenté : l'annulation est prise en compte au prochain
 point de contrôle. Une inférence GPU déjà lancée n'est pas interruptible.
 
-### 8. Résultat de mauvaise qualité
+### 9. Résultat de mauvaise qualité
 
 Ce n'est pas nécessairement un bug. Par ordre de fréquence :
 

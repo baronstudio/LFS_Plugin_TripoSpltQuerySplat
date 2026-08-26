@@ -37,6 +37,23 @@ import lichtfeld as lf
 lf.plugins.install("baronstudio/LFS_Plugin_TripoSpltQuerySplat")
 ```
 
+> **Deux conditions, sans quoi cette commande échoue :**
+>
+> 1. **Le dépôt doit être public.** L'installeur télécharge
+>    `https://api.github.com/repos/<owner>/<repo>/tarball` en n'envoyant qu'un
+>    en-tête `User-Agent` : aucun jeton d'authentification n'est transmis
+>    (`lfs_plugins/installer.py`, `_download_url_to_temp`). Sur un dépôt privé,
+>    GitHub répond **404** et la trace s'arrête sur `urlopen`.
+> 2. **Le code doit être sur la branche par défaut.** Sans référence explicite,
+>    `github_archive_url()` interroge l'endpoint `tarball` sans ref, que GitHub
+>    résout vers la branche par défaut du dépôt (`master` ici).
+>
+> Une branche précise peut être visée avec la syntaxe `owner/repo@branche`,
+> mais cela ne contourne pas la condition 1.
+>
+> Dépôt privé ? Utilisez l'option B : `git` s'authentifie avec vos identifiants,
+> et `load()` construit l'environnement isolé exactement de la même façon.
+
 ### Option B — développement, par lien
 
 ```bash

@@ -52,7 +52,7 @@ demande depuis `facebook/map-anything-apache`.
 
 ## Installation
 
-### Depuis LichtFeld Studio (recommandé)
+### Depuis LichtFeld Studio
 
 Console Python de l'application :
 
@@ -61,7 +61,12 @@ import lichtfeld as lf
 lf.plugins.install("baronstudio/LFS_Plugin_TripoSpltQuerySplat")
 ```
 
-### En développement (lien symbolique)
+> Nécessite un **dépôt public** et le code sur la **branche par défaut** :
+> l'installeur télécharge l'archive GitHub sans authentification. Sur un dépôt
+> privé, la commande échoue sur `urlopen` (404). Voir
+> [`docs/03-installation.md`](docs/03-installation.md).
+
+### Par clone (fonctionne aussi sur dépôt privé)
 
 ```bash
 git clone https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat.git
