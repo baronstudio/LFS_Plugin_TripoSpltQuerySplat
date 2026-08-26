@@ -6,6 +6,10 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 ## [Non publie]
 
 ### Corrige
+- Documentation : recuperation apres une interruption de `uv sync`. Un arret de
+  LichtFeld pendant la synchronisation laisse des verrous orphelins ; le
+  chargement suivant attend indefiniment, sans consommer aucune ressource.
+  Procedure de nettoyage dans `docs/05-depannage.md` (entree 2).
 - Documentation : `lf.plugins.install()` exige un depot public et le code sur
   la branche par defaut. L'installeur de LichtFeld telecharge l'archive GitHub
   sans authentification ; sur un depot prive, l'echec se presente comme une

@@ -68,7 +68,55 @@ lf.plugins.load("photosplat")   # construit aussi l'environnement isole
 `load()` appelle `installer.ensure_venv()` : un plugin lie manuellement obtient
 donc le meme environnement qu'un plugin installe depuis GitHub.
 
-### 2. L'environnement isolé ne se construit pas (`uv sync` échoue)
+### 2. Après une interruption : le chargement tourne en boucle sans rien consommer
+
+**Symptôme** : LichtFeld a été fermé ou tué pendant `Syncing dependencies with
+uv...`. Au redémarrage, le chargement du plugin ne progresse plus et **ni le
+CPU, ni le GPU, ni le réseau ne travaillent**.
+
+**Cause** : une interruption en plein `uv sync` laisse un environnement isolé
+incomplet et, surtout, des **verrous de fichiers orphelins** — `uv` sérialise
+ses écritures pour éviter deux installations concurrentes. Un verrou détenu par
+un processus mort n'est jamais relâché : le nouveau processus attend
+indéfiniment. L'absence totale d'activité machine est la signature d'une attente
+sur verrou, jamais d'un calcul en cours.
+
+**Correctif** — dans l'ordre, PowerShell :
+
+```powershell
+# 1. Aucun processus residuel ne doit tenir les verrous
+Get-Process LichtFeld-Studio, uv -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# 2. Supprimer l'environnement incomplet et le verrouillage de resolution
+Remove-Item -Recurse -Force "$HOME\.lichtfeld\plugins\photosplat\.venv" -ErrorAction SilentlyContinue
+Remove-Item -Force "$HOME\.lichtfeld\plugins\photosplat\uv.lock" -ErrorAction SilentlyContinue
+
+# 3. Relancer LichtFeld Studio, puis recharger
+```
+
+```python
+import lichtfeld as lf
+lf.plugins.load("photosplat")
+```
+
+La reconstruction est **beaucoup plus rapide que la première fois** : le cache
+`uv` conserve les roues déjà téléchargées, seule la réinstallation dans le venv
+est refaite. Ne videz surtout pas ce cache.
+
+Si le blocage persiste après ce nettoyage, reconstruisez l'environnement à la
+main pour voir l'erreur réelle, que l'interface n'affiche pas toujours :
+
+```powershell
+cd "$HOME\.lichtfeld\plugins\photosplat"
+uv sync --project . --verbose
+```
+
+**Prévention** : la première installation télécharge plusieurs gigaoctets et
+peut sembler figée alors qu'elle travaille. Vérifiez l'activité réseau dans le
+gestionnaire des tâches avant de conclure à un blocage — tant que le débit est
+non nul, laissez faire.
+
+### 3. L'environnement isolé ne se construit pas (`uv sync` échoue)
 
 **Cause la plus probable** : les versions PyTorch épinglées
 (`torch==2.11.0` / `torchvision==0.26.0`, index `cu130`) ne correspondent pas au
@@ -85,7 +133,7 @@ url = "https://download.pytorch.org/whl/cu126"   # à adapter
 Vérifiez la version CUDA supportée par votre driver avec `nvidia-smi`
 (coin supérieur droit).
 
-### 3. `Paquet mapanything introuvable`
+### 4. `Paquet mapanything introuvable`
 
 L'installation de `mapanything` depuis git a échoué (réseau, proxy, git absent
 du PATH, ou compilation d'une dépendance). Relancez l'installation du plugin et
@@ -98,7 +146,7 @@ le venv du plugin :
   "pycolmap==3.10.0" open3d
 ```
 
-### 4. `Aucun GPU CUDA disponible`
+### 5. `Aucun GPU CUDA disponible`
 
 `torch.cuda.is_available()` renvoie faux. Soit le driver est trop ancien pour
 la roue CUDA installée, soit une roue CPU a été résolue. Vérifiez dans le venv
@@ -108,9 +156,9 @@ du plugin :
 import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())
 ```
 
-Un `torch.version.cuda` à `None` signifie roue CPU → point 2.
+Un `torch.version.cuda` à `None` signifie roue CPU → point 3.
 
-### 5. Mémoire GPU insuffisante pendant l'inférence
+### 6. Mémoire GPU insuffisante pendant l'inférence
 
 **Symptômes** : `CUDA out of memory`, ou l'application se fige puis reprend.
 
@@ -123,7 +171,7 @@ Un `torch.version.cuda` à `None` signifie roue CPU → point 2.
 Le plafond automatique est volontairement prudent (6 vues si la VRAM n'a pas pu
 être détectée). Il est dérivé dans `core/gpu.py`, table `_VIEW_BUDGET`.
 
-### 6. LichtFeld ne reconnaît pas le dataset généré
+### 7. LichtFeld ne reconnaît pas le dataset généré
 
 **Cause probable** : convention de dossier. MapAnything écrit `sparse/*.bin`,
 LichtFeld attend `sparse/0/*.bin`. Le plugin duplique les fichiers dans
@@ -139,7 +187,7 @@ sparse/points.ply
 Si `sparse/0/` est vide, l'export a échoué avant : consultez le journal du
 panneau.
 
-### 7. Le panneau ne s'affiche pas / erreur d'appel d'un widget
+### 8. Le panneau ne s'affiche pas / erreur d'appel d'un widget
 
 L'API immédiate de LichtFeld peut évoluer d'une version à l'autre. Le panneau
 n'utilise que des widgets documentés (`label`, `heading`, `button`,
@@ -151,12 +199,12 @@ En cas d'erreur sur l'un d'eux, `lf.plugins.get_traceback("photosplat")` donne
 la ligne exacte. Le correctif est local à `panels/main_panel.py` : la logique
 métier n'est pas concernée.
 
-### 8. Le bouton `Annuler` ne réagit pas immédiatement
+### 9. Le bouton `Annuler` ne réagit pas immédiatement
 
 Comportement normal et documenté : l'annulation est prise en compte au prochain
 point de contrôle. Une inférence GPU déjà lancée n'est pas interruptible.
 
-### 9. Résultat de mauvaise qualité
+### 10. Résultat de mauvaise qualité
 
 Ce n'est pas nécessairement un bug. Par ordre de fréquence :
 
