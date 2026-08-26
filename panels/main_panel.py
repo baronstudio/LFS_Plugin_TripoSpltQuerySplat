@@ -27,16 +27,26 @@ _LOG_LINES = 12
 
 
 class MainPanel(lf.ui.Panel):
-    """Photos -> dataset ou splat -> scene LichtFeld."""
+    """Photos -> dataset ou splat -> scene LichtFeld.
+
+    `MAIN_PANEL_TAB` place le panneau dans la zone a onglets principale, aux
+    cotes de « Rendering » et « Training ». C'est l'emplacement retenu par les
+    plugins existants de LichtFeld Studio, et le seul ou l'utilisateur trouve
+    naturellement un outil de generation.
+    """
 
     id = f"{PLUGIN_ID}.main_panel"
     label = PLUGIN_NAME
-    space = lf.ui.PanelSpace.SIDE_PANEL
+    space = lf.ui.PanelSpace.MAIN_PANEL_TAB
+    order = 230
     update_policy = "interval"
     update_interval_ms = 120
 
     def __init__(self) -> None:
-        super().__init__()
+        # Pas de `super().__init__()` : la classe de base est exposee depuis le
+        # C++ et son constructeur n'accepte pas d'appel explicite. L'invoquer
+        # fait echouer la construction du panneau -- le plugin reste « active »
+        # mais aucun panneau n'apparait, sans erreur visible.
         self.settings = settings_mod.Settings.load()
         self.job = pipeline.Job()
         self.gpu = gpu.detect()

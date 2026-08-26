@@ -5,6 +5,23 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 
 ## [Non publie]
 
+## [0.1.2] - 2026-08-26
+
+### Corrige
+- **Le plugin passait « active » mais aucun panneau n'apparaissait.** Deux
+  causes, alignees sur les plugins LichtFeld existants :
+  - `MainPanel.__init__` appelait `super().__init__()`. La classe de base
+    `lf.ui.Panel` est exposee depuis le C++ et son constructeur n'accepte pas
+    cet appel : la construction du panneau echouait. Le plugin restant charge,
+    l'echec ne remontait nulle part.
+  - L'emplacement etait `PanelSpace.SIDE_PANEL`. Le panneau est desormais en
+    `PanelSpace.MAIN_PANEL_TAB`, dans la zone a onglets principale, aux cotes
+    de « Rendering » et « Training ».
+
+### Modifie
+- Ajout de `order = 230` pour un rang stable parmi les onglets.
+
+
 ## [0.1.1] - 2026-08-26
 
 ### Corrige
@@ -68,6 +85,7 @@ d'alignement prealable.
 - AnySplat, QuerySplat et VGGT-Omega ecartes pour contamination de licence
   non commerciale. Detail dans `docs/01-analyse-stack.md`.
 
-[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.1.1...HEAD
+[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.2
 [0.1.1]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.1
 [0.1.0]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.0

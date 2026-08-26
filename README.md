@@ -2,7 +2,7 @@
 
 **Quelques photos d'un objet → un 3D Gaussian Splatting, sans étape d'alignement.**
 
-[![Version](https://img.shields.io/badge/version-0.1.1-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.1.2-blue)](CHANGELOG.md)
 [![Licence](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
 [![LichtFeld Studio](https://img.shields.io/badge/LichtFeld%20Studio-%E2%89%A5%200.5.0-orange)](https://github.com/MrNeRF/LichtFeld-Studio)
 
@@ -89,7 +89,7 @@ Détails et diagnostic : [`docs/03-installation.md`](docs/03-installation.md).
 
 ## Utilisation
 
-Le panneau **PhotoSplat** apparaît dans le panneau latéral.
+Le panneau **PhotoSplat** apparaît dans la zone à onglets principale, à côté de « Rendering » et « Training ».
 
 1. **Photos** — désignez le dossier. `Analyser` liste les images exploitables.
    Comptez **6 à 20 vues** autour du sujet ; deux vues suffisent techniquement,

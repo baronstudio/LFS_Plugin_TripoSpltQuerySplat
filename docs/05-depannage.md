@@ -229,7 +229,29 @@ sparse/points.ply
 Si `sparse/0/` est vide, l'export a échoué avant : consultez le journal du
 panneau.
 
-### 9. Le panneau ne s'affiche pas / erreur d'appel d'un widget
+### 9. Le plugin est « active » mais aucun panneau n'apparaît (corrigé en 0.1.2)
+
+**Symptôme** : le marketplace affiche `Status: active`, aucune erreur, mais
+aucun onglet PhotoSplat nulle part.
+
+**Causes** (versions ≤ 0.1.1) :
+
+1. `MainPanel.__init__` appelait `super().__init__()`. `lf.ui.Panel` est exposée
+   depuis le C++ et son constructeur n'accepte pas cet appel : la construction
+   du panneau échouait. Comme `on_load()` avait réussi, le plugin restait
+   « active » et l'échec ne remontait nulle part.
+2. Le panneau était déclaré en `PanelSpace.SIDE_PANEL`, une région où il
+   n'était pas visible dans la disposition par défaut.
+
+**Correctif** : mettre à jour en **0.1.2 ou supérieur** (`git pull` puis
+`lf.plugins.reload("photosplat")`). Le panneau apparaît alors dans la zone à
+onglets principale, à côté de « Rendering » et « Training ».
+
+**Pour tout autre panneau invisible** : l'onglet **Logging** de LichtFeld
+Studio est l'endroit où remontent les erreurs de construction et de dessin,
+que le marketplace n'affiche pas.
+
+### 10. Erreur d'appel d'un widget de l'interface
 
 L'API immédiate de LichtFeld peut évoluer d'une version à l'autre. Le panneau
 n'utilise que des widgets documentés (`label`, `heading`, `button`,
@@ -241,12 +263,12 @@ En cas d'erreur sur l'un d'eux, `lf.plugins.get_traceback("photosplat")` donne
 la ligne exacte. Le correctif est local à `panels/main_panel.py` : la logique
 métier n'est pas concernée.
 
-### 10. Le bouton `Annuler` ne réagit pas immédiatement
+### 11. Le bouton `Annuler` ne réagit pas immédiatement
 
 Comportement normal et documenté : l'annulation est prise en compte au prochain
 point de contrôle. Une inférence GPU déjà lancée n'est pas interruptible.
 
-### 11. Résultat de mauvaise qualité
+### 12. Résultat de mauvaise qualité
 
 Ce n'est pas nécessairement un bug. Par ordre de fréquence :
 
