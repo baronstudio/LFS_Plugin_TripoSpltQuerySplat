@@ -12,12 +12,16 @@ from dataclasses import dataclass
 
 #: Paliers de VRAM (Go) -> nombre de vues traitees en une passe.
 #: Valeurs prudentes : mieux vaut un run lent qui aboutit qu'un OOM.
+#:
+#: Les seuils sont volontairement SOUS la capacite nominale : une carte vendue
+#: pour 8 Go expose 8188 Mio, soit 7,996 Gio. Un seuil pose a 8.0 la ferait
+#: retomber au palier le plus bas -- exactement le bug corrige en 0.1.4.
 _VIEW_BUDGET = (
-    (24.0, 64),
-    (16.0, 40),
-    (12.0, 24),
-    (8.0, 12),
-    (0.0, 6),
+    (22.0, 64),  # 24 Go annonces
+    (15.0, 40),  # 16 Go
+    (11.0, 24),  # 12 Go
+    (7.0, 12),  # 8 Go
+    (0.0, 6),  # en deca, ou VRAM inconnue
 )
 
 

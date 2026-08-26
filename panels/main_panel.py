@@ -63,6 +63,7 @@ class MainPanel(lf.ui.Panel):
         self._image_problems: list[str] = []
         self._scanned_for: str = ""
         self._notice: str = ""
+        self._draw_failure: str = ""
         if self.settings.images_dir:
             self._scan()
         self._refresh_backend_check()
@@ -111,6 +112,29 @@ class MainPanel(lf.ui.Panel):
     # ------------------------------------------------------------------ dessin
 
     def draw(self, ui) -> None:
+        """Point d'entree du rendu, protege.
+
+        Une exception ici -- typiquement un ecart d'API de l'hote -- fait
+        disparaitre le panneau entier : LichtFeld journalise « Panel draw
+        error » et n'affiche plus rien. On prefere afficher la panne dans le
+        panneau, et ne la journaliser qu'une fois plutot qu'a chaque frame.
+        """
+        try:
+            self._draw(ui)
+        except Exception as exc:  # noqa: BLE001 - le panneau doit survivre
+            self._render_failure(ui, exc)
+
+    def _render_failure(self, ui, exc: Exception) -> None:
+        message = f"{type(exc).__name__}: {exc}"
+        if message != self._draw_failure:
+            self._draw_failure = message
+            lfs.log(f"PhotoSplat : erreur de rendu du panneau -- {message}")
+        ui.heading(PLUGIN_NAME)
+        ui.text_colored("Le panneau a rencontre une erreur.", _ERR)
+        ui.text_wrapped(message)
+        ui.text_disabled("Details complets dans l'onglet Logging.")
+
+    def _draw(self, ui) -> None:
         state = self.job.snapshot()
         backend = registry.get(self.settings.backend)
 

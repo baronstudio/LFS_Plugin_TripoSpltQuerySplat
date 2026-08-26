@@ -5,6 +5,34 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 
 ## [Non publie]
 
+## [0.1.4] - 2026-08-26
+
+### Corrige
+- **`AttributeError: module 'lichtfeld' has no attribute 'is_training_active'`
+  au clic sur « Generer ».** Cette fonction existe sur la branche `master` de
+  LichtFeld Studio mais pas en 0.5.3, ou l'equivalent est `trainer_state()`.
+  L'exception survenant pendant `draw()`, le panneau entier cessait de
+  s'afficher.
+  - `core/lfs.py` devient un adaptateur reellement defensif : aucune de ses
+    fonctions ne leve, les appels absents retournent une valeur neutre.
+  - `is_training_active()` essaie `is_training_active`, puis `trainer_state()`,
+    puis repond « non ».
+- **Plafond de vues errone sur une carte 8 Go.** `nvidia-smi` rapporte
+  8188 Mio, soit 7,996 Gio : le seuil pose a `8.0` faisait retomber la carte au
+  palier le plus prudent (6 vues au lieu de 12). Les seuils passent sous les
+  capacites nominales.
+
+### Ajoute
+- `draw()` est protege : une erreur de rendu s'affiche dans le panneau et n'est
+  journalisee qu'une fois, au lieu de faire disparaitre l'interface entiere.
+- 13 tests supplementaires (54 au total) : adaptateur d'hote face a une API
+  incomplete, et non-regression sur les paliers de VRAM.
+
+### Modifie
+- Toute la journalisation passe par `core.lfs.log`, qui s'adapte a `info`,
+  `warn` ou `warning` selon ce qu'expose l'hote.
+
+
 ### Modifie
 - README : le rendu du panneau passe de « non execute » a valide sur LichtFeld
   Studio 0.5.3 / Windows (RTX 4060 Laptop, 8 Go). La detection GPU, le registre
@@ -114,7 +142,8 @@ d'alignement prealable.
 - AnySplat, QuerySplat et VGGT-Omega ecartes pour contamination de licence
   non commerciale. Detail dans `docs/01-analyse-stack.md`.
 
-[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.1.3...HEAD
+[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.4
 [0.1.3]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.3
 [0.1.2]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.2
 [0.1.1]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.1

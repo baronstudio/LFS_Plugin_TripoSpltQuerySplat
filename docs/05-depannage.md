@@ -251,7 +251,27 @@ onglets principale, à côté de « Rendering » et « Training ».
 Studio est l'endroit où remontent les erreurs de construction et de dessin,
 que le marketplace n'affiche pas.
 
-### 10. Erreur d'appel d'un widget de l'interface
+### 10. `AttributeError: module 'lichtfeld' has no attribute ...` (corrigé en 0.1.4)
+
+**Symptôme** : l'onglet Logging affiche `Panel draw error: Traceback ...
+AttributeError: module 'lichtfeld' has no attribute 'is_training_active'`, et
+le panneau se vide.
+
+**Cause** : l'API Python de LichtFeld Studio varie d'une version à l'autre.
+`is_training_active()` existe sur la branche `master` mais pas en 0.5.3, où
+l'équivalent est `trainer_state()`. Toute exception levée pendant `draw()` fait
+disparaître le panneau entier.
+
+**Correctif** : mettre à jour en **0.1.4 ou supérieur**. Depuis cette version,
+`core/lfs.py` est la seule frontière avec l'hôte et aucune de ses fonctions ne
+lève : un appel absent retourne une valeur neutre. `draw()` est par ailleurs
+protégé — une erreur s'affiche désormais **dans** le panneau plutôt que de le
+faire disparaître.
+
+**Si un autre écart d'API apparaît** : ajoutez le repli dans `core/lfs.py`
+uniquement. Aucun autre fichier n'appelle `lichtfeld` directement.
+
+### 11. Erreur d'appel d'un widget de l'interface
 
 L'API immédiate de LichtFeld peut évoluer d'une version à l'autre. Le panneau
 n'utilise que des widgets documentés (`label`, `heading`, `button`,
@@ -263,12 +283,12 @@ En cas d'erreur sur l'un d'eux, `lf.plugins.get_traceback("photosplat")` donne
 la ligne exacte. Le correctif est local à `panels/main_panel.py` : la logique
 métier n'est pas concernée.
 
-### 11. Le bouton `Annuler` ne réagit pas immédiatement
+### 12. Le bouton `Annuler` ne réagit pas immédiatement
 
 Comportement normal et documenté : l'annulation est prise en compte au prochain
 point de contrôle. Une inférence GPU déjà lancée n'est pas interruptible.
 
-### 12. Résultat de mauvaise qualité
+### 13. Résultat de mauvaise qualité
 
 Ce n'est pas nécessairement un bug. Par ordre de fréquence :
 

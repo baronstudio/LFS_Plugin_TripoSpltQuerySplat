@@ -18,6 +18,17 @@ class TestGpu(unittest.TestCase):
         self.assertLessEqual(gpu.max_views_for(0), known)
         self.assertGreater(gpu.max_views_for(0), 0)
 
+    def test_capacite_nominale_ne_retombe_pas_au_palier_bas(self):
+        """Regression 0.1.4 : une carte 8 Go expose 7,996 Gio.
+
+        Un seuil pose a 8.0 la faisait basculer au palier le plus prudent.
+        """
+        self.assertEqual(gpu.max_views_for(7.996), gpu.max_views_for(8.0))
+        self.assertGreater(gpu.max_views_for(7.996), gpu.max_views_for(0))
+        for nominal in (12.0, 16.0, 24.0):
+            with self.subTest(nominal=nominal):
+                self.assertEqual(gpu.max_views_for(nominal - 0.01), gpu.max_views_for(nominal))
+
     def test_detect_never_raises(self):
         info = gpu.detect()
         self.assertIsInstance(info.describe(), str)
