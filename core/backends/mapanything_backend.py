@@ -27,6 +27,7 @@ from .base import (
     RunResult,
     missing_modules,
     raise_if_cancelled,
+    require_modules,
     unique_names,
 )
 
@@ -60,7 +61,10 @@ class MapAnythingBackend:
     def check(self) -> list[str]:
         """Verification instantanee : presence des modules, sans les importer.
 
-        Voir `missing_modules` : importer torch ici figerait l'interface.
+        Voir `missing_modules` : importer torch ici figerait l'interface. La
+        contrepartie est qu'un module present mais defaillant (DLL manquante,
+        extension native incompatible) passe ce controle ; il est rattrape par
+        `require_modules()` au debut de `run()`.
         """
         missing = missing_modules(REQUIRED_MODULES)
         if missing:
@@ -83,9 +87,13 @@ class MapAnythingBackend:
         os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
         result = RunResult()
-        report(0.02, "Preparation")
+        report(0.02, "Verification des dependances")
         raise_if_cancelled(cancel)
+        # Avant tout travail couteux : un module qui ne s'importe pas doit se
+        # signaler en quelques secondes, pas apres plusieurs minutes d'inference.
+        require_modules(REQUIRED_MODULES)
 
+        report(0.05, "Preparation")
         import torch
         from mapanything.models import MapAnything
         from mapanything.utils.colmap_export import export_predictions_to_colmap

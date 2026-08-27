@@ -2,7 +2,7 @@
 
 **Quelques photos d'un objet → un 3D Gaussian Splatting, sans étape d'alignement.**
 
-[![Version](https://img.shields.io/badge/version-0.1.4-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.1.5-blue)](CHANGELOG.md)
 [![Licence](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
 [![LichtFeld Studio](https://img.shields.io/badge/LichtFeld%20Studio-%E2%89%A5%200.5.0-orange)](https://github.com/MrNeRF/LichtFeld-Studio)
 
@@ -167,7 +167,7 @@ core/                    logique métier — aucune dépendance à l'interface
   backends/              moteurs — un fichier par moteur
 panels/main_panel.py     interface (affichage uniquement)
 panels/main_panel.rml    coquille du panneau + ancrage du rendu immediat
-tests/                   54 tests, sans GPU ni torch ni LichtFeld
+tests/                   57 tests, sans GPU ni torch ni LichtFeld
 scripts/                 installation et montée de version
 docs/                    documentation technique
 ```
@@ -196,7 +196,7 @@ Transparence sur ce qui est réellement testé à ce jour :
 
 | Périmètre | État |
 |---|---|
-| Noyau (scan, validation, réglages, runner, registre, version) | ✅ 54 tests automatisés, verts en CI |
+| Noyau (scan, validation, réglages, runner, registre, version) | ✅ 57 tests automatisés, verts en CI |
 | Lint et format (`ruff`) | ✅ verts |
 | Détection GPU, registre des moteurs, présence des dépendances | ✅ validé sur le poste cible : GPU et VRAM affichés, aucun module manquant |
 | Chaîne GPU complète (MapAnything → dataset → entraînement) | ⚠️ **non exécutée** : reste le jalon de recette |

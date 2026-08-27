@@ -14,6 +14,7 @@ dans `registry.py`. Rien d'autre a modifier.
 
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import threading
 from collections.abc import Callable
@@ -119,6 +120,34 @@ def missing_modules(names: tuple[str, ...]) -> list[str]:
             # Paquet dont le parent est absent ou casse : traite comme manquant.
             missing.append(name)
     return missing
+
+
+def require_modules(names: tuple[str, ...]) -> None:
+    """Importe reellement chaque module, ou leve un message exploitable.
+
+    `missing_modules()` ne constate que la presence d'un fichier : un module
+    peut etre installe et malgre tout refuser de s'importer -- DLL introuvable,
+    extension native compilee contre une autre version de NumPy, runtime C++
+    absent. Ces pannes-la n'apparaissent qu'a l'import.
+
+    A appeler au tout debut de `run()`, dans le thread de travail : l'echec
+    tombe en quelques secondes, avant le telechargement des poids et
+    l'inference, au lieu d'apres.
+    """
+    for name in names:
+        try:
+            importlib.import_module(name)
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                f"Le module « {name} » est absent de l'environnement du plugin.\n"
+                "Reinstallez le plugin, ou voir docs/03-installation.md."
+            ) from exc
+        except Exception as exc:  # noqa: BLE001 - DLL, ABI native, runtime C++...
+            raise RuntimeError(
+                f"Le module « {name} » est installe mais refuse de s'importer.\n"
+                f"{type(exc).__name__}: {exc}\n"
+                "Diagnostic et correctifs : docs/05-depannage.md."
+            ) from exc
 
 
 def unique_names(paths: list[Path]) -> list[str]:

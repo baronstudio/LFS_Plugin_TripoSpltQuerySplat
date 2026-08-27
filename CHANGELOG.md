@@ -5,6 +5,21 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 
 ## [Non publie]
 
+## [0.1.5] - 2026-08-26
+
+### Ajoute
+- **Echec rapide sur dependance defaillante.** `run()` importe reellement les
+  modules requis avant tout travail couteux. Une dependance installee mais
+  inutilisable -- DLL introuvable, extension native compilee contre une autre
+  version de NumPy, runtime C++ absent -- se signale desormais en quelques
+  secondes, au lieu d'apres le telechargement des poids et une inference
+  complete.
+  Constate sur `pycolmap` : `find_spec` le trouvait, l'import echouait a
+  l'export, en toute fin de chaine.
+- Message d'erreur distinguant le module absent du module present mais casse,
+  et citant l'erreur d'import d'origine.
+
+
 ## [0.1.4] - 2026-08-26
 
 ### Corrige
@@ -142,7 +157,8 @@ d'alignement prealable.
 - AnySplat, QuerySplat et VGGT-Omega ecartes pour contamination de licence
   non commerciale. Detail dans `docs/01-analyse-stack.md`.
 
-[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.1.4...HEAD
+[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.5
 [0.1.4]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.4
 [0.1.3]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.3
 [0.1.2]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.2

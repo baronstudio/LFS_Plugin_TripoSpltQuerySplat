@@ -114,3 +114,29 @@ class TestHelpers(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestRequireModules(unittest.TestCase):
+    """`require_modules` rattrape ce que `find_spec` laisse passer."""
+
+    def test_modules_sains(self):
+        base.require_modules(("json", "pathlib"))
+
+    def test_module_absent(self):
+        with self.assertRaises(RuntimeError) as ctx:
+            base.require_modules(("module_absent_xyz",))
+        self.assertIn("absent", str(ctx.exception))
+
+    def test_module_present_mais_casse(self):
+        """Cas reel : extension native installee dont l'import echoue."""
+        import importlib
+
+        def boom(name):
+            raise ImportError("DLL load failed while importing " + name)
+
+        with mock.patch.object(importlib, "import_module", boom):
+            with self.assertRaises(RuntimeError) as ctx:
+                base.require_modules(("pycolmap",))
+        message = str(ctx.exception)
+        self.assertIn("refuse de s'importer", message)
+        self.assertIn("DLL load failed", message)

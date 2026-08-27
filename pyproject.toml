@@ -1,6 +1,6 @@
 [project]
 name = "photosplat"
-version = "0.1.4"
+version = "0.1.5"
 description = "Plugin LichtFeld Studio : quelques photos -> dataset COLMAP -> 3D Gaussian Splatting, sans etape d'alignement."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
