@@ -6,6 +6,13 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 ## [Non publie]
 
 ### Ajoute
+- Evaluation de Spirula Studio (`docs/06`, section 5) : entraineur 3DGS
+  autonome en C++/Vulkan, GPL-3.0. Son SfM est un SIFT incremental facon
+  COLMAP, donc sujet aux memes deux obstacles que MapAnything sur une prise de
+  vue plateau tournant a fond blanc. Il apporte en revanche une contre-expertise
+  du diagnostic, la relecture directe de nos datasets, et surtout l'idee
+  d'ecrire les masques dans `masks/` pour les fournir a l'entrainement plutot
+  que de seulement nettoyer le nuage d'initialisation.
 - Audit de licence de TRELLIS et Hunyuan3D (`docs/01-analyse-stack.md`, 8.4).
   Hunyuan3D est ecarte : sa licence exclut explicitement l'Union europeenne du
   territoire couvert. TRELLIS est exploitable commercialement a condition de

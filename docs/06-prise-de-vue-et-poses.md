@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Version doc** | 1.0.0 |
+| **Version doc** | 1.1.0 |
 | **Date** | 2026-08-27 |
 | **Statut** | Aide à la décision — options ouvertes |
 | **Public** | Technicien prise de vue / dev plugin |
@@ -187,7 +187,87 @@ sujet de recherche à part entière. **À écarter.**
 
 ---
 
-## 5. Recommandation
+## 5. Spirula Studio — ce que cet outil apporte, et ce qu'il n'apporte pas
+
+[`harry7557558/spirula-studio`](https://github.com/harry7557558/spirula-studio)
+est un entraîneur 3DGS autonome en C++/Vulkan : de la photo brute au splat puis
+au maillage texturé, sans Python, sans PyTorch, sans COLMAP installés. Il
+annonce 10 M de gaussiennes à SH complètes dans 8 Go de VRAM, tourne sur GPU
+NVIDIA, AMD, Intel et Apple, et gère nativement fisheye et 360°.
+Licence **GPL-3.0**.
+
+### 5.1 Il ne résout pas notre problème de plateau tournant
+
+Ses notes de conception (`docs/notes/sfm-design.md`) sont explicites sur la
+nature de son SfM :
+
+| Décision | Contenu |
+|---|---|
+| D1 | « Feature frontend: hand-written GPU SIFT » |
+| D2 | « Mapper: incremental (COLMAP-style) primary » |
+| D9 | vérification F/H non calibrée, pose issue de E |
+
+C'est donc un **SfM classique** — SIFT, appariement, RANSAC, reconstruction
+incrémentale — porté sur GPU. Autrement dit : un COLMAP rapide.
+
+Or les deux causes identifiées au §2 le frappent de plein fouet, et même plus
+durement qu'un modèle appris :
+
+- un cyclo blanc ne produit **aucun point SIFT** exploitable ;
+- un objet qui tourne devant une caméra fixe viole l'hypothèse de scène rigide
+  sur laquelle repose tout l'appariement géométrique.
+
+**N'attendez pas de Spirula qu'il réussisse là où MapAnything échoue.** Il
+appartient à l'autre grande famille d'algorithmes, mais bute sur les mêmes deux
+obstacles.
+
+### 5.2 Trois apports concrets, en revanche
+
+**a. Une contre-expertise du diagnostic, en une commande.** La décision D14
+expose un `sfm auto` : « one command from images to a COLMAP model ». Passer les
+quatre photos studio dedans départage définitivement. Si un SfM classique
+échoue lui aussi, deux familles d'algorithmes indépendantes convergent, et la
+cause est bien le protocole de prise de vue — pas le choix du moteur.
+
+**b. Nos datasets sont directement lisibles par lui.** La décision D4 pose
+l'interchange via les formats COLMAP, et `docs/datasets.md` précise que le
+répertoire de reconstruction est auto-détecté parmi
+`{sparse/0, colmap/sparse/0, sparse, colmap, .}` — exactement ce que
+`core/colmap.py` écrit. Spirula devient donc un **entraîneur alternatif à
+LichtFeld** pour comparer la qualité sur un même dataset, sans rien coder.
+
+**c. L'apport le plus utile : les masques.** Ses dossiers par défaut sont
+`images/`, `masks/`, `depths/`, `normals/`. Il consomme donc des masques à
+l'entraînement — et l'API de LichtFeld en fait autant, `optimization_params()`
+exposant les réglages de masques et de supervision profondeur/normales.
+
+Cela change la portée de l'**option D** : un détourage ne doit pas seulement
+nettoyer le nuage d'initialisation, il doit être **écrit en `masks/` et fourni
+à l'entraînement**. Le fond blanc cesse alors de contribuer à la fonction de
+coût, au lieu d'être simplement retiré après coup. C'est plus efficace, et
+c'est gratuit : le même détourage sert deux fois.
+
+### 5.3 Précaution de licence
+
+**GPL-3.0.** Aucune ligne de son code ne peut entrer dans ce plugin, qui est
+MIT — ce serait une contamination. Lire ses notes de conception pour s'en
+inspirer est en revanche parfaitement licite, et c'est ce qui a été fait ici.
+
+L'appeler comme **exécutable séparé**, à la manière dont on invoque COLMAP ou
+ffmpeg, est le schéma d'usage admis et ne contamine pas notre code. Deux règles
+alors : ne pas redistribuer le binaire avec le plugin, et laisser l'utilisateur
+l'installer lui-même.
+
+### 5.4 À savoir : c'est aussi un concurrent
+
+Photo brute → splat → maillage texturé, sans dépendance, sur n'importe quel
+GPU : pour une capture caméra-mobile, Spirula couvre à lui seul ce que font
+LichtFeld et ce plugin réunis. Cela mérite d'être mesuré avant d'investir
+davantage — mais cela ne change rien au cas studio, qui reste le point bloquant.
+
+---
+
+## 6. Recommandation
 
 **Court terme, aujourd'hui, sans code : l'option B.** Un tapis texturé posé sous
 l'objet et tournant avec lui rend le plateau tournant compatible avec le modèle.
@@ -203,6 +283,10 @@ demander à un modèle de le deviner.
 **En parallèle : l'option E comme second moteur.** L'architecture à moteurs
 interchangeables est faite pour ça. Un mode « objet » servirait les cas où la
 prise de vue ne peut pas être maîtrisée, en assumant sa nature générative.
+
+**À évaluer en parallèle, sans code** : passer les quatre photos dans le
+`sfm auto` de Spirula Studio (§5.2a). Le résultat confirme ou infirme le
+diagnostic par une seconde famille d'algorithmes.
 
 **À ne pas faire** : accumuler les vues. Passer de 4 à 12 photos sur plateau
 tournant à fond blanc ne changera rien — la question posée au modèle reste
