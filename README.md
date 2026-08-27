@@ -94,6 +94,11 @@ Le panneau **PhotoSplat** apparaît dans la zone à onglets principale, à côt�
 1. **Photos** — désignez le dossier. `Analyser` liste les images exploitables.
    JPG, PNG et HEIC sont lus directement ; TIFF, WebP et BMP sont convertis en
    PNG automatiquement, le panneau vous indique combien.
+
+   > ⚠️ **La caméra doit tourner autour du sujet, pas l'inverse.** Une prise de
+   > vue sur plateau tournant à fond blanc met le moteur en échec : il estime la
+   > position de la caméra, qui n'a pas bougé. Voir
+   > [`docs/06-prise-de-vue-et-poses.md`](docs/06-prise-de-vue-et-poses.md).
    Comptez **6 à 20 vues** autour du sujet ; deux vues suffisent techniquement,
    mais l'entraînement n'aura pas de quoi travailler.
 2. **Moteur** — `MapAnything` par défaut. La licence et le modèle utilisés sont
@@ -233,6 +238,7 @@ probables et la marche à suivre.
 - [`docs/03-installation.md`](docs/03-installation.md) — installation détaillée
 - [`docs/04-versionnage.md`](docs/04-versionnage.md) — convention de version et procédure de publication
 - [`docs/05-depannage.md`](docs/05-depannage.md) — diagnostic
+- [`docs/06-prise-de-vue-et-poses.md`](docs/06-prise-de-vue-et-poses.md) — pourquoi une prise de vue sur plateau tournant met le moteur en échec, et les options
 
 ## Références
 

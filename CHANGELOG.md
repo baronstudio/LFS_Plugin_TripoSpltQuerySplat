@@ -5,6 +5,14 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 
 ## [Non publie]
 
+### Ajoute
+- `docs/06-prise-de-vue-et-poses.md` : analyse du cas « produit studio ». Une
+  prise de vue sur plateau tournant a fond blanc met en echec l'estimation de
+  pose -- le modele cherche le deplacement d'une camera qui n'a pas bouge. Six
+  options chiffrees, du tapis texture solidaire du plateau (sans code) aux
+  poses declarees par gabarit, jusqu'au moteur objet-centre.
+- README : avertissement sur le protocole de prise de vue.
+
 ## [0.2.1] - 2026-08-26
 
 ### Corrige
