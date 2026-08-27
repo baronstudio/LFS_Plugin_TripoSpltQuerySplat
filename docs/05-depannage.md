@@ -192,7 +192,26 @@ format COLMAP binaire et sous-échantillonne le nuage. Après mise à jour,
 réinstallez le plugin pour que l'environnement isolé soit reconstruit sans ces
 deux paquets — sans quoi ils resteront installés, inoffensifs mais inutiles.
 
-### 6. `Paquet mapanything introuvable`
+### 6. `No valid images found` ou `UnboundLocalError: 'outputs'` (corrigé en 0.2.1)
+
+**Symptôme** : le panneau liste bien vos photos, la génération démarre, puis
+échoue tout de suite. Le journal montre `ValueError: No valid images found`,
+suivi d'un `UnboundLocalError: cannot access local variable 'outputs'`.
+
+**Deux défauts superposés** :
+
+1. `load_images` ne lit que **JPG, PNG et HEIC/HEIF**. Le scan du plugin
+   acceptait aussi les TIFF, très courants en production photo.
+2. Le bloc `finally` du moteur référençait `outputs`, non encore liée quand
+   l'échec précédait l'inférence — l'`UnboundLocalError` **masquait** la cause
+   réelle.
+
+**Correctif** : mettre à jour en **0.2.1 ou supérieur**. Les formats non natifs
+(TIFF, WebP, BMP) sont désormais convertis en PNG automatiquement avant
+l'inférence, dans le sous-dossier `input/` du run. Le panneau annonce le nombre
+de conversions avant même le lancement.
+
+### 7. `Paquet mapanything introuvable`
 
 L'installation de `mapanything` depuis git a échoué (réseau, proxy, git absent
 du PATH, ou compilation d'une dépendance). Relancez l'installation du plugin et
@@ -205,7 +224,7 @@ le venv du plugin :
   "pycolmap==3.10.0" open3d
 ```
 
-### 7. `Aucun GPU CUDA disponible`
+### 8. `Aucun GPU CUDA disponible`
 
 `torch.cuda.is_available()` renvoie faux. Soit le driver est trop ancien pour
 la roue CUDA installée, soit une roue CPU a été résolue. Vérifiez dans le venv
@@ -217,7 +236,7 @@ import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_availab
 
 Un `torch.version.cuda` à `None` signifie roue CPU → point 4.
 
-### 8. Mémoire GPU insuffisante pendant l'inférence
+### 9. Mémoire GPU insuffisante pendant l'inférence
 
 **Symptômes** : `CUDA out of memory`, ou l'application se fige puis reprend.
 
@@ -230,13 +249,14 @@ Un `torch.version.cuda` à `None` signifie roue CPU → point 4.
 Le plafond automatique est volontairement prudent (6 vues si la VRAM n'a pas pu
 être détectée). Il est dérivé dans `core/gpu.py`, table `_VIEW_BUDGET`.
 
-### 9. LichtFeld ne reconnaît pas le dataset généré
+### 10. LichtFeld ne reconnaît pas le dataset généré
 
 **Vérification** : depuis la 0.2.0, le plugin écrit directement dans
 `sparse/0/`, la disposition attendue par LichtFeld et par COLMAP. Le dossier de
 run doit contenir :
 
 ```
+input/            images converties, si des formats non natifs etaient presents
 images/           non vide
 sparse/0/cameras.bin  images.bin  points3D.bin
 sparse/points.ply
@@ -245,7 +265,7 @@ sparse/points.ply
 Si `sparse/0/` est vide, l'export a échoué avant : consultez le journal du
 panneau.
 
-### 10. Le plugin est « active » mais aucun panneau n'apparaît (corrigé en 0.1.2)
+### 11. Le plugin est « active » mais aucun panneau n'apparaît (corrigé en 0.1.2)
 
 **Symptôme** : le marketplace affiche `Status: active`, aucune erreur, mais
 aucun onglet PhotoSplat nulle part.
@@ -267,7 +287,7 @@ onglets principale, à côté de « Rendering » et « Training ».
 Studio est l'endroit où remontent les erreurs de construction et de dessin,
 que le marketplace n'affiche pas.
 
-### 11. `AttributeError: module 'lichtfeld' has no attribute ...` (corrigé en 0.1.4)
+### 12. `AttributeError: module 'lichtfeld' has no attribute ...` (corrigé en 0.1.4)
 
 **Symptôme** : l'onglet Logging affiche `Panel draw error: Traceback ...
 AttributeError: module 'lichtfeld' has no attribute 'is_training_active'`, et
@@ -287,7 +307,7 @@ faire disparaître.
 **Si un autre écart d'API apparaît** : ajoutez le repli dans `core/lfs.py`
 uniquement. Aucun autre fichier n'appelle `lichtfeld` directement.
 
-### 12. Erreur d'appel d'un widget de l'interface
+### 13. Erreur d'appel d'un widget de l'interface
 
 L'API immédiate de LichtFeld peut évoluer d'une version à l'autre. Le panneau
 n'utilise que des widgets documentés (`label`, `heading`, `button`,
@@ -299,12 +319,12 @@ En cas d'erreur sur l'un d'eux, `lf.plugins.get_traceback("photosplat")` donne
 la ligne exacte. Le correctif est local à `panels/main_panel.py` : la logique
 métier n'est pas concernée.
 
-### 13. Le bouton `Annuler` ne réagit pas immédiatement
+### 14. Le bouton `Annuler` ne réagit pas immédiatement
 
 Comportement normal et documenté : l'annulation est prise en compte au prochain
 point de contrôle. Une inférence GPU déjà lancée n'est pas interruptible.
 
-### 14. Résultat de mauvaise qualité
+### 15. Résultat de mauvaise qualité
 
 Ce n'est pas nécessairement un bug. Par ordre de fréquence :
 

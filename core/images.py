@@ -9,8 +9,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-#: Extensions acceptees par les moteurs (minuscules, point inclus).
-SUPPORTED_SUFFIXES = frozenset({".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"})
+#: Extensions proposees a l'utilisateur (minuscules, point inclus).
+#:
+#: Plus large que ce que les moteurs lisent nativement : les formats absents de
+#: `BackendInfo.native_suffixes` sont convertis en PNG avant l'inference. Mieux
+#: vaut convertir un TIFF -- courant en production photo -- que le rejeter.
+SUPPORTED_SUFFIXES = frozenset(
+    {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff", ".heic", ".heif"}
+)
 
 
 @dataclass(frozen=True)

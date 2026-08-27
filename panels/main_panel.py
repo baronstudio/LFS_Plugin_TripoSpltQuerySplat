@@ -61,6 +61,7 @@ class MainPanel(lf.ui.Panel):
         self.images = images_mod.ImageSet(paths=(), ignored=())
         self._backend_problems: list[str] = []
         self._image_problems: list[str] = []
+        self._to_convert: int = 0
         self._scanned_for: str = ""
         self._notice: str = ""
         self._draw_failure: str = ""
@@ -95,6 +96,8 @@ class MainPanel(lf.ui.Panel):
         self._image_problems = images_mod.validate(
             self.images, backend.info.min_images, backend.info.max_images
         )
+        native = set(backend.info.native_suffixes)
+        self._to_convert = sum(1 for path in self.images.paths if path.suffix.lower() not in native)
 
     def _effective_max_views(self) -> int:
         """Plafond applique : reglage explicite, sinon deduit de la VRAM."""
@@ -180,6 +183,12 @@ class MainPanel(lf.ui.Panel):
 
         if self.settings.images_dir and self._scanned_for != self.settings.images_dir:
             ui.text_colored("Dossier modifie : relancez l'analyse.", _WARN)
+
+        if self._to_convert:
+            ui.text_disabled(
+                f"{self._to_convert} image(s) seront converties en PNG : "
+                "format non lu directement par le moteur."
+            )
 
         selected = len(self._selected_images())
         if selected and selected < self.images.count:

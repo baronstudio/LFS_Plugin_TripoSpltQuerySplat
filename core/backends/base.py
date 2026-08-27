@@ -44,6 +44,8 @@ class BackendInfo:
     license: str
     commercial_ok: bool
     summary: str
+    #: Extensions que le moteur lit sans conversion prealable.
+    native_suffixes: tuple[str, ...] = (".jpg", ".jpeg", ".png")
 
     def license_line(self) -> str:
         mark = "usage commercial autorise" if self.commercial_ok else "USAGE NON COMMERCIAL"
@@ -150,18 +152,23 @@ def require_modules(names: tuple[str, ...]) -> None:
             ) from exc
 
 
-def unique_names(paths: list[Path]) -> list[str]:
-    """Noms de fichiers uniques et stables pour COLMAP.
+def dedupe_names(names: list[str]) -> list[str]:
+    """Rend une liste de noms uniques, en prefixant les doublons par leur rang.
 
-    Deux photos peuvent porter le meme nom dans deux sous-dossiers ; COLMAP
-    indexe les vues par nom, une collision corromprait la reconstruction.
+    COLMAP indexe les vues par nom : une collision corromprait la
+    reconstruction. Le cas se presente avec des sous-dossiers homonymes, mais
+    aussi apres conversion (`a.tif` et `a.png` deviendraient tous deux `a.png`).
     """
     seen: set[str] = set()
-    names: list[str] = []
-    for index, path in enumerate(paths):
-        name = path.name
+    unique: list[str] = []
+    for index, name in enumerate(names):
         if name in seen:
-            name = f"{index:04d}_{path.name}"
+            name = f"{index:04d}_{name}"
         seen.add(name)
-        names.append(name)
-    return names
+        unique.append(name)
+    return unique
+
+
+def unique_names(paths: list[Path]) -> list[str]:
+    """Noms de fichiers uniques et stables pour COLMAP."""
+    return dedupe_names([path.name for path in paths])

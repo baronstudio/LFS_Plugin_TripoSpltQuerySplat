@@ -31,6 +31,7 @@ from .base import (
     BackendInfo,
     ProgressFn,
     RunResult,
+    dedupe_names,
     missing_modules,
     raise_if_cancelled,
     require_modules,
@@ -56,6 +57,9 @@ INFO = BackendInfo(
         "Estime poses et geometrie metrique a partir de plusieurs photos non "
         "calibrees, puis produit un dataset COLMAP que LichtFeld entraine."
     ),
+    # Ce que `mapanything.utils.image.load_images` lit sans conversion.
+    # pillow-heif, installe avec mapanything, ajoute HEIC et HEIF.
+    native_suffixes=(".jpg", ".jpeg", ".png", ".heic", ".heif"),
 )
 
 
@@ -119,17 +123,26 @@ class MapAnythingBackend:
         seed_everything(int(params.get("seed", 42)))
         device = "cuda"
 
-        report(0.10, f"Chargement du modele ({MODEL_ID})")
+        report(0.10, "Preparation des images")
+        raise_if_cancelled(cancel)
+        sources, names, converted = _prepare_inputs(images, work_dir / "input")
+        if converted:
+            result.add(f"{converted} image(s) converties en PNG : format non lu par le moteur.")
+
+        report(0.15, f"Chargement du modele ({MODEL_ID})")
         raise_if_cancelled(cancel)
         model = MapAnything.from_pretrained(MODEL_ID).to(device)
         model.eval()
         result.add(f"Modele charge sur {device}.")
 
+        # Initialise avant le `try` : le bloc `finally` ne doit jamais referencer
+        # une variable non liee, sous peine de masquer l'erreur d'origine par un
+        # UnboundLocalError.
+        outputs = None
         try:
-            report(0.25, f"Lecture de {len(images)} photo(s)")
+            report(0.25, f"Lecture de {len(sources)} photo(s)")
             raise_if_cancelled(cancel)
-            names = unique_names(images)
-            views = load_images([str(path) for path in images])
+            views = load_images([str(path) for path in sources])
             result.add(f"{len(views)} vue(s) preparee(s).")
 
             report(0.35, "Inference : poses, profondeurs, nuage 3D")
@@ -154,7 +167,8 @@ class MapAnythingBackend:
             result.add(f"{len(points)} points avant sous-echantillonnage.")
         finally:
             # La VRAM doit etre rendue avant que LichtFeld ne lance l'entrainement.
-            del model, outputs
+            del model
+            outputs = None
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
@@ -189,6 +203,43 @@ class MapAnythingBackend:
         result.add(f"Dataset COLMAP pret : {work_dir}")
         report(1.0, "Termine")
         return result
+
+
+def _prepare_inputs(images: list[Path], staging_dir: Path) -> tuple[list[Path], list[str], int]:
+    """Rend des chemins lisibles par le moteur, en convertissant si besoin.
+
+    `load_images` n'accepte que JPG, PNG et, via pillow-heif, HEIC/HEIF. Les
+    autres formats courants en production photo -- TIFF au premier chef -- sont
+    convertis en PNG dans un dossier de travail, plutot que rejetes : le moteur
+    re-encode de toute facon les images a sa propre resolution.
+
+    Retourne les chemins a donner au moteur, les noms retenus pour COLMAP, et
+    le nombre de conversions effectuees.
+    """
+    from PIL import Image
+
+    native = set(INFO.native_suffixes)
+    targets = [
+        name if Path(name).suffix.lower() in native else Path(name).with_suffix(".png").name
+        for name in unique_names(images)
+    ]
+    # Une conversion peut recreer une collision : `a.tif` et `a.png` donneraient
+    # tous deux `a.png`.
+    targets = dedupe_names(targets)
+
+    sources: list[Path] = []
+    converted = 0
+    for path, target in zip(images, targets, strict=True):
+        if path.suffix.lower() in native:
+            sources.append(path)
+            continue
+        staging_dir.mkdir(parents=True, exist_ok=True)
+        destination = staging_dir / target
+        with Image.open(path) as handle:
+            handle.convert("RGB").save(destination)
+        sources.append(destination)
+        converted += 1
+    return sources, targets, converted
 
 
 def _collect(outputs):

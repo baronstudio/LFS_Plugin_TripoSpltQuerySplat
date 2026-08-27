@@ -5,6 +5,33 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 
 ## [Non publie]
 
+## [0.2.1] - 2026-08-26
+
+### Corrige
+- **`UnboundLocalError: cannot access local variable 'outputs'` masquait
+  l'erreur reelle.** Le bloc `finally` referencait `outputs`, non encore liee
+  lorsque l'echec survenait avant l'inference. L'utilisateur voyait donc une
+  erreur de variable la ou le probleme etait tout autre. La variable est
+  desormais initialisee avant le `try`.
+- **`ValueError: No valid images found` sur des fichiers TIFF.** Le scan du
+  plugin acceptait les TIFF, que `load_images` refuse : il ne lit que JPG, PNG
+  et, via pillow-heif, HEIC/HEIF.
+
+### Ajoute
+- **Conversion automatique des formats non natifs.** TIFF, WebP et BMP sont
+  convertis en PNG dans un dossier de travail avant l'inference, plutot que
+  rejetes : le TIFF est courant en production photo, et le moteur re-encode de
+  toute facon les images a sa propre resolution. Le nombre de conversions est
+  annonce dans le panneau avant la generation, et journalise pendant.
+- `BackendInfo.native_suffixes` : chaque moteur declare ce qu'il lit sans
+  conversion. HEIC et HEIF sont natifs, pillow-heif arrivant avec mapanything.
+- `dedupe_names()` : la conversion peut recreer une collision de noms
+  (`a.tif` et `a.png` donneraient tous deux `a.png`), que COLMAP ne tolere pas.
+- 7 tests de preparation des images : formats natifs laisses intacts, TIFF
+  converti, melange de formats, collision apres conversion, TIFF en niveaux de
+  gris, extensions en majuscules.
+
+
 ## [0.2.0] - 2026-08-26
 
 Premiere chaine complete fonctionnelle : l'inference multi-vues sur GPU est
@@ -189,7 +216,8 @@ d'alignement prealable.
 - AnySplat, QuerySplat et VGGT-Omega ecartes pour contamination de licence
   non commerciale. Detail dans `docs/01-analyse-stack.md`.
 
-[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.2.0...HEAD
+[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.2.1
 [0.2.0]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.2.0
 [0.1.5]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.5
 [0.1.4]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.4

@@ -2,7 +2,7 @@
 
 **Quelques photos d'un objet → un 3D Gaussian Splatting, sans étape d'alignement.**
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.1-blue)](CHANGELOG.md)
 [![Licence](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
 [![LichtFeld Studio](https://img.shields.io/badge/LichtFeld%20Studio-%E2%89%A5%200.5.0-orange)](https://github.com/MrNeRF/LichtFeld-Studio)
 
@@ -92,6 +92,8 @@ Détails et diagnostic : [`docs/03-installation.md`](docs/03-installation.md).
 Le panneau **PhotoSplat** apparaît dans la zone à onglets principale, à côté de « Rendering » et « Training ».
 
 1. **Photos** — désignez le dossier. `Analyser` liste les images exploitables.
+   JPG, PNG et HEIC sont lus directement ; TIFF, WebP et BMP sont convertis en
+   PNG automatiquement, le panneau vous indique combien.
    Comptez **6 à 20 vues** autour du sujet ; deux vues suffisent techniquement,
    mais l'entraînement n'aura pas de quoi travailler.
 2. **Moteur** — `MapAnything` par défaut. La licence et le modèle utilisés sont
@@ -107,6 +109,7 @@ Le panneau **PhotoSplat** apparaît dans la zone à onglets principale, à côt�
 Les sorties sont écrites dans `~/.lichtfeld/photosplat/runs/<horodatage>-<moteur>/` :
 
 ```
+input/             images converties en PNG, si des formats non natifs étaient présents
 images/            photos ré-échantillonnées à la résolution du modèle
 sparse/
   cameras.bin      convention MapAnything
@@ -168,7 +171,7 @@ core/                    logique métier — aucune dépendance à l'interface
   backends/              moteurs — un fichier par moteur
 panels/main_panel.py     interface (affichage uniquement)
 panels/main_panel.rml    coquille du panneau + ancrage du rendu immediat
-tests/                   73 tests, sans GPU ni torch ni LichtFeld
+tests/                   80 tests, sans GPU ni torch ni LichtFeld
 scripts/                 installation et montée de version
 docs/                    documentation technique
 ```
@@ -197,12 +200,12 @@ Transparence sur ce qui est réellement testé à ce jour :
 
 | Périmètre | État |
 |---|---|
-| Noyau (scan, validation, réglages, runner, registre, version) | ✅ 73 tests automatisés, verts en CI |
+| Noyau (scan, validation, réglages, runner, registre, version) | ✅ 80 tests automatisés, verts en CI |
 | Lint et format (`ruff`) | ✅ verts |
 | Détection GPU, registre des moteurs, présence des dépendances | ✅ validé sur le poste cible : GPU et VRAM affichés, aucun module manquant |
-| Inférence MapAnything sur GPU (poses, profondeurs, nuage 3D) | ✅ validée sur le poste cible (RTX 4060, 7 photos) |
+| Chaîne complète : photos → inférence GPU → dataset → entraînement 3DGS | ✅ **validée de bout en bout** sur le poste cible (RTX 4060, 7 photos) |
 | Écriture du dataset COLMAP | ✅ 16 tests d'aller-retour binaire ; ⚠️ pas encore relu par LichtFeld |
-| Entraînement 3DGS à partir du dataset généré | ⚠️ **reste le dernier jalon de recette** |
+| Écriture puis relecture du dataset par LichtFeld | ✅ dataset généré, chargé et entraînement lancé sur le poste cible |
 | Chargement du plugin dans l'application | ✅ validé sur LichtFeld 0.5.3 / Windows (correctif 0.1.1) |
 | Rendu du panneau dans l'application | ✅ validé sur LichtFeld Studio 0.5.3 / Windows (RTX 4060 Laptop, 8 Go) |
 
