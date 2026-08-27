@@ -63,6 +63,7 @@ thread d'interface et le thread de génération.
 | `core/images.py` | scan, tri, validation des photos | aucune |
 | `core/gpu.py` | détection VRAM, dérivation des plafonds | torch *optionnel* |
 | `core/settings.py` | préférences persistantes JSON | aucune |
+| `core/colmap.py` | écriture COLMAP binaire, PLY, voxels | numpy |
 | `core/pipeline.py` | exécution en tâche de fond, progression, annulation | aucune |
 | `core/lfs.py` | adaptateur de l'API LichtFeld | `lichtfeld` *optionnel* |
 | `core/backends/base.py` | contrat `Backend`, `RunResult`, utilitaires | aucune |
@@ -184,6 +185,20 @@ l'alignement, pas à remplacer l'entraînement.
 MapAnything écrit selon une convention, LichtFeld et COLMAP en attendent une
 autre. Copier trois fichiers coûte quelques kilo-octets et évite un dossier
 inutilisable par l'un ou l'autre des outils.
+
+**Pourquoi réécrire l'export COLMAP plutôt qu'utiliser celui de MapAnything ?**
+Le sien dépend de `pycolmap` et `open3d`, deux extensions natives. Sur
+Windows / Python 3.12, `pycolmap` n'existe qu'en 3.10.0 et sa roue échoue à
+s'initialiser — sans alternative, les versions 4.x ne publiant pas de roue pour
+cette combinaison. Or aucun algorithme de COLMAP n'était appelé : il ne
+s'agissait que de sérialiser des caméras, des poses et un nuage de points.
+`core/colmap.py` fait ce travail en numpy et `struct`, ce qui retire ~450 Mo
+d'installation et les deux seuls composants natifs fragiles de la chaîne.
+
+Ce module ne pouvant pas être exercé sur un GPU ici, il est vérifié par
+aller-retour : `tests/test_colmap.py` relit les fichiers produits avec un
+lecteur écrit à partir de la **spécification** du format, pas à partir du code
+testé — une erreur d'écriture ne peut donc pas se compenser elle-même.
 
 **Pourquoi une coquille RML alors que tout est dessine en mode immediat ?**
 Parce qu'un panneau sans attribut `template` est enregistre mais ne s'affiche

@@ -2,7 +2,7 @@
 
 **Quelques photos d'un objet → un 3D Gaussian Splatting, sans étape d'alignement.**
 
-[![Version](https://img.shields.io/badge/version-0.1.5-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue)](CHANGELOG.md)
 [![Licence](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
 [![LichtFeld Studio](https://img.shields.io/badge/LichtFeld%20Studio-%E2%89%A5%200.5.0-orange)](https://github.com/MrNeRF/LichtFeld-Studio)
 
@@ -41,7 +41,7 @@ commercial visé (voir [`docs/01-analyse-stack.md`](docs/01-analyse-stack.md)).
 |---|---|
 | **LichtFeld Studio** | ≥ 0.5.0 (système de plugins et runtime Python embarqué) |
 | **GPU** | NVIDIA avec CUDA. Le plugin détecte la VRAM et adapte le nombre de vues traitées |
-| **Disque** | ~6 Go : environnement Python isolé + poids du modèle |
+| **Disque** | ~5 Go : environnement Python isolé + poids du modèle |
 | **Réseau** | Requis au premier lancement (téléchargement des poids depuis Hugging Face) |
 | **Compte** | Aucun. Pas de `hf auth login`, pas de conditions à accepter |
 
@@ -159,6 +159,7 @@ __init__.py              point d'entrée (on_load / on_unload)
 pyproject.toml           dépendances + contrat [tool.lichtfeld]
 core/                    logique métier — aucune dépendance à l'interface
   version.py             source unique du numéro de version
+  colmap.py              écriture COLMAP binaire, PLY, voxels — sans dépendance native
   images.py              scan et validation des photos
   gpu.py                 détection VRAM et garde-fous
   settings.py            préférences persistantes
@@ -167,7 +168,7 @@ core/                    logique métier — aucune dépendance à l'interface
   backends/              moteurs — un fichier par moteur
 panels/main_panel.py     interface (affichage uniquement)
 panels/main_panel.rml    coquille du panneau + ancrage du rendu immediat
-tests/                   57 tests, sans GPU ni torch ni LichtFeld
+tests/                   73 tests, sans GPU ni torch ni LichtFeld
 scripts/                 installation et montée de version
 docs/                    documentation technique
 ```
@@ -196,10 +197,12 @@ Transparence sur ce qui est réellement testé à ce jour :
 
 | Périmètre | État |
 |---|---|
-| Noyau (scan, validation, réglages, runner, registre, version) | ✅ 57 tests automatisés, verts en CI |
+| Noyau (scan, validation, réglages, runner, registre, version) | ✅ 73 tests automatisés, verts en CI |
 | Lint et format (`ruff`) | ✅ verts |
 | Détection GPU, registre des moteurs, présence des dépendances | ✅ validé sur le poste cible : GPU et VRAM affichés, aucun module manquant |
-| Chaîne GPU complète (MapAnything → dataset → entraînement) | ⚠️ **non exécutée** : reste le jalon de recette |
+| Inférence MapAnything sur GPU (poses, profondeurs, nuage 3D) | ✅ validée sur le poste cible (RTX 4060, 7 photos) |
+| Écriture du dataset COLMAP | ✅ 16 tests d'aller-retour binaire ; ⚠️ pas encore relu par LichtFeld |
+| Entraînement 3DGS à partir du dataset généré | ⚠️ **reste le dernier jalon de recette** |
 | Chargement du plugin dans l'application | ✅ validé sur LichtFeld 0.5.3 / Windows (correctif 0.1.1) |
 | Rendu du panneau dans l'application | ✅ validé sur LichtFeld Studio 0.5.3 / Windows (RTX 4060 Laptop, 8 Go) |
 

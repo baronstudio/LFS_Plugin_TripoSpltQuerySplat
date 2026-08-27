@@ -5,6 +5,38 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 
 ## [Non publie]
 
+## [0.2.0] - 2026-08-26
+
+Premiere chaine complete fonctionnelle : l'inference multi-vues sur GPU est
+validee sur le poste cible, et l'export ne depend plus d'aucun composant natif.
+
+### Retire
+- **Dependances `pycolmap` et `open3d`.** Sur Windows / Python 3.12, `pycolmap`
+  n'existe qu'en 3.10.0 -- les versions 4.x ne publient pas de roue pour cette
+  combinaison -- et cette roue echoue a l'import : « DLL load failed while
+  importing pycolmap: une routine d'initialisation d'une bibliotheque de liens
+  dynamiques a echoue ». L'export s'arretait donc en toute fin de chaine, apres
+  une inference reussie.
+
+### Ajoute
+- `core/colmap.py` : ecriture du format COLMAP binaire (`cameras.bin`,
+  `images.bin`, `points3D.bin`), export PLY et sous-echantillonnage par voxels,
+  en numpy et `struct` uniquement. Aucun algorithme de COLMAP n'etait utilise :
+  il ne s'agissait que de serialiser cameras, poses et nuage de points.
+- 16 tests d'aller-retour : les fichiers produits sont relus par un lecteur
+  ecrit a partir de la specification du format, et non a partir du code teste,
+  de sorte qu'une erreur d'ecriture ne puisse pas se compenser elle-meme.
+  Conversions quaternion et inversion de pose verifiees sur des rotations
+  aleatoires, y compris les cas a trace negative.
+
+### Modifie
+- Le dataset est ecrit directement dans `sparse/0/`, sans recopie apres coup.
+- La VRAM est liberee avant l'ecriture du dataset, et non apres : tout est
+  rapatrie sur le CPU des la fin de l'inference.
+- Installation allegee d'environ 450 Mo, et privee de ses deux seuls composants
+  natifs fragiles.
+
+
 ## [0.1.5] - 2026-08-26
 
 ### Ajoute
@@ -157,7 +189,8 @@ d'alignement prealable.
 - AnySplat, QuerySplat et VGGT-Omega ecartes pour contamination de licence
   non commerciale. Detail dans `docs/01-analyse-stack.md`.
 
-[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.1.5...HEAD
+[Non publie]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.2.0
 [0.1.5]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.5
 [0.1.4]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.4
 [0.1.3]: https://github.com/baronstudio/LFS_Plugin_TripoSpltQuerySplat/releases/tag/v0.1.3

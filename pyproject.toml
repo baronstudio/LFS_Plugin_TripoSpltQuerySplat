@@ -1,6 +1,6 @@
 [project]
 name = "photosplat"
-version = "0.1.5"
+version = "0.2.0"
 description = "Plugin LichtFeld Studio : quelques photos -> dataset COLMAP -> 3D Gaussian Splatting, sans etape d'alignement."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
@@ -17,9 +17,9 @@ dependencies = [
     "pillow",
     # Version epinglee : une montee de version doit etre un commit explicite.
     "mapanything @ git+https://github.com/facebookresearch/map-anything.git@v1.1.3",
-    "pycolmap==3.10.0",
-    "open3d",
 ]
+# Ni `pycolmap` ni `open3d` : l'ecriture COLMAP et le sous-echantillonnage par
+# voxels sont assures par `core/colmap.py`. Voir docs/02-architecture.md.
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]

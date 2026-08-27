@@ -15,8 +15,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      # numpy est la seule dependance des tests : `core/colmap.py` remplace
+      # pycolmap et open3d, et doit etre verifie par aller-retour binaire.
       - name: Installer les outils de controle
-        run: python -m pip install --upgrade ruff
+        run: python -m pip install --upgrade ruff numpy
 
       # Le noyau doit rester importable sans torch, sans CUDA et sans
       # LichtFeld Studio : c'est ce qui rend cette CI possible.
