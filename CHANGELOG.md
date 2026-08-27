@@ -6,6 +6,11 @@ Versionnage : [SemVer](https://semver.org/lang/fr/) -- voir `docs/04-versionnage
 ## [Non publie]
 
 ### Ajoute
+- Audit de licence de TRELLIS et Hunyuan3D (`docs/01-analyse-stack.md`, 8.4).
+  Hunyuan3D est ecarte : sa licence exclut explicitement l'Union europeenne du
+  territoire couvert. TRELLIS est exploitable commercialement a condition de
+  rester sur le chemin gaussien, ses deux sous-modules non commerciaux etant un
+  moteur de rendu et un extracteur de maillage, dont le plugin n'a pas besoin.
 - `docs/06-prise-de-vue-et-poses.md` : analyse du cas « produit studio ». Une
   prise de vue sur plateau tournant a fond blanc met en echec l'estimation de
   pose -- le modele cherche le deplacement d'une camera qui n'a pas bouge. Six

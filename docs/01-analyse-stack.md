@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | `docs/01-analyse-stack.md` |
-| **Version doc** | 1.1.0 |
+| **Version doc** | 1.2.0 |
 | **Date** | 2026-08-26 (rév. 1.1.0 : audit de licence, §9) |
 | **Statut** | **Stack figée** — voir §8 et §9 |
 | **Public** | Technicien 3D / dev plugin |
